@@ -1,6 +1,7 @@
 package replicaManager;
 
 import replicaManager.server.ReplicaManager;
+import replicaManager.server.impl.Branch;
 import replicaManager.server.impl.ServerImpl;
 
 public class Main {
@@ -8,8 +9,8 @@ public class Main {
     public static void main(String[] args) {
 
         //Validate Args
-        if (args.length < 1) {
-            System.out.println("Usage: rm <implementation (RA,SY,MA)>");
+        if (args.length < 2) {
+            System.out.println("Usage: rm <implementation (RA,SY,MA)> <branch (BC,MB,NB,QC)>");
             System.exit(0);
         }
 
@@ -35,8 +36,19 @@ public class Main {
                 System.exit(0);
         }
 
+        //Set chosen branch
+        Branch branch = null;
+
+        String branchChoice = args[2];
+        try {
+            branch = Branch.valueOf(branchChoice);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: Branch must be one of (BC,MB,NB,QC)");
+            System.exit(0);
+        }
+
         //Start replica manager
-        ReplicaManager replicaManager = new ReplicaManager(serverImpl);
+        ReplicaManager replicaManager = new ReplicaManager(branch, serverImpl);
 
     }
 }
