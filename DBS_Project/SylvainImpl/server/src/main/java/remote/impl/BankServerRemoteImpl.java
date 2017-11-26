@@ -1,29 +1,24 @@
-package remote.corba;
+package remote.impl;
 
 import logging.BankLogger;
 import models.account.BankAccount;
 import models.branch.Branch;
 import models.user.CustomerUser;
 import models.user.ManagerUser;
-import org.omg.CORBA.ORB;
+import remote.BranchServer;
 import remote.database.CustomerDatabase;
 import remote.database.ManagerDatabase;
-import remote.util.CORBAConnector;
 
 import java.math.BigDecimal;
 
 
-public class BankServerRemoteImpl extends BankServerRemotePOA {
-
-    private ORB orb;
+public class BankServerRemoteImpl implements BranchServer {
 
     private Branch thisBranch;
     private CustomerDatabase customerDatabase;
     private ManagerDatabase managerDatabase;
 
-    public BankServerRemoteImpl(Branch thisBranch, ORB orb) {
-        this.orb = orb;
-
+    public BankServerRemoteImpl(Branch thisBranch) {
         this.thisBranch = thisBranch;
 
         //Initialize Databases
@@ -34,26 +29,6 @@ public class BankServerRemoteImpl extends BankServerRemotePOA {
         this.managerDatabase = ManagerDatabase.getInstance();
         this.managerDatabase.addManager(new ManagerUser(thisBranch));
         this.managerDatabase.addManager(new ManagerUser(thisBranch));
-    }
-
-    /*
-     * Server Operations
-     */
-    @Override
-    public String transferAccount(String firstName, String lastName, String address, String phone, String balance) {
-        BankLogger.logAction("-Received transferAccount command");
-        BankLogger.logAction("\tfirstName: " + firstName);
-        BankLogger.logAction("\tlastName: " + lastName);
-        BankLogger.logAction("\taddress: " + address);
-        BankLogger.logAction("\tphone: " + phone);
-        BankLogger.logAction("\tbalance : $" + balance);
-
-        BankLogger.logAction("-Transferring customer to branch " + thisBranch);
-        CustomerUser customerUser = new CustomerUser(thisBranch, firstName, lastName, address, phone, balance);
-        this.customerDatabase.addCustomer(customerUser);
-        BankLogger.logAction("-Customer has been transferred and now has customerId " + customerUser.getCustomerId());
-
-        return customerUser.getCustomerId();
     }
 
     /*
@@ -78,16 +53,15 @@ public class BankServerRemoteImpl extends BankServerRemotePOA {
                 if (branchEnum.toString().equals(managerUser.getManagerId().substring(0, 2))) {
                     CustomerUser customerUser = new CustomerUser(branchEnum, firstName, lastName, address, phone);
                     this.customerDatabase.addCustomer(customerUser);
-                    response = BankLogger.logAndReturn("Successfully created new customer and added to customer database. \nCustomer Data: \n\t" + customerUser.toString());
+                    response = BankLogger.logAndReturn("Successfully created new customer and added to customer database. Customer id: " + customerUser.getCustomerId());
                 } else {
-                    response = BankLogger.logAndReturn("Error: Manager with id " + managerId + " is not authorized to run operations on " + branchEnum + "'s server");
+                    response = BankLogger.logAndReturn("Manager with id " + managerId + " is not authorized to run operations on " + branchEnum + "'s server");
                 }
             } catch (IllegalArgumentException e) {
-                response = BankLogger.logAndReturn("Error: You have entered an invalid branch");
+                response = BankLogger.logAndReturn("You have entered an invalid branch");
             }
-
         } else {
-            response = BankLogger.logAndReturn("Error: Could not find manager with id: " + managerId);
+            response = BankLogger.logAndReturn("Could not find manager with id: " + managerId);
         }
 
         return response;
@@ -113,34 +87,16 @@ public class BankServerRemoteImpl extends BankServerRemotePOA {
                     case "phone":
                         customerUser.setPhoneNumber(newValue);
                         break;
-                    case "branch":
-                        try {
-                            Branch newBranch = Branch.valueOf(newValue);
-                            BankServerRemote serverRemote = CORBAConnector.connectServer(newBranch);
-
-                            if (serverRemote != null) {
-                                this.customerDatabase.removeCustomer(customerUser);
-                                String customerUserTransferredID = serverRemote.transferAccount(customerUser.getFirstName(), customerUser.getLastName(), customerUser.getAddress(), customerUser.getPhoneNumber(), customerUser.getBankAccount().getBalance().toString());
-                                return BankLogger.logAndReturn("Transferred user with id " + customerId + " to branch " + newBranch + ". Customer now has ID " + customerUserTransferredID + " and is no longer under branch " + thisBranch + "'s control.");
-                            } else {
-                                return BankLogger.logAndReturn("Error: Could not connect server for branch " + newBranch + ". Operation failed.");
-                            }
-                        } catch (IllegalArgumentException e) {
-                            return BankLogger.logAndReturn("Error: Branch value supplied for newValue (" + newValue + ") is not a valid branch");
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            return BankLogger.logAndReturn("Error: Could not connect to server for specified branch. It might be offline.");
-                        }
                     default:
-                        return BankLogger.logAndReturn("Error: fieldName must be one of (address|phone|branch)");
+                        return BankLogger.logAndReturn("Field name must be one of (address|phone)");
                 }
 
-                response = BankLogger.logAndReturn("Changed field " + fieldName + " to " + newValue + " for customer with id " + customerId + "\nCustomer Data: \n\t" + customerUser.toString());
+                response = BankLogger.logAndReturn("Changed field " + fieldName + " to " + newValue + " for customer with id " + customerId);
             } else {
-                response = BankLogger.logAndReturn("Error: Could not find customer with id: " + customerId);
+                response = BankLogger.logAndReturn("Could not find customer with id: " + customerId);
             }
         } else {
-            response = BankLogger.logAndReturn("Error: Could not find manager with id: " + managerId);
+            response = BankLogger.logAndReturn("Could not find manager with id " + managerId);
         }
 
         return response;
@@ -168,7 +124,7 @@ public class BankServerRemoteImpl extends BankServerRemotePOA {
             }
 
         } else {
-            response = BankLogger.logAndReturn("Error: Could not find customer with id " + customerId);
+            response = BankLogger.logAndReturn("Could not find customer with id " + customerId);
         }
 
         return response;
@@ -186,13 +142,13 @@ public class BankServerRemoteImpl extends BankServerRemotePOA {
             BankAccount bankAccount = customerUser.getBankAccount();
 
             if (!bankAccount.validateAmount(new BigDecimal(amount))) {
-                response = BankLogger.logAndReturn("Cannot withdraw a negative amount or $0.");
+                response = BankLogger.logAndReturn("Cannot withdraw a negative amount or $0");
             } else {
                 if (bankAccount.canWithdraw(new BigDecimal(amount))) {
                     bankAccount.withdraw(new BigDecimal(amount));
                     response = BankLogger.logAndReturn("Withdrew $" + amount + " from your account. (" + customerId + "). New Balance: $" + bankAccount.getBalance());
                 } else {
-                    response = BankLogger.logAndReturn("You do not have enough funds to withdraw $" + amount + ". Your balance is $" + bankAccount.getBalance() + ".");
+                    response = BankLogger.logAndReturn("You do not have enough funds to withdraw $" + amount + ". Your balance is $" + bankAccount.getBalance());
                 }
             }
 
@@ -216,10 +172,5 @@ public class BankServerRemoteImpl extends BankServerRemotePOA {
             response = BankLogger.logAndReturn("Could not find customer with id " + customerId);
 
         return response;
-    }
-
-    @Override
-    public void shutdown() {
-        orb.shutdown(true);
     }
 }
