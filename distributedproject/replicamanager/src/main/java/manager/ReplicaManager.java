@@ -117,12 +117,18 @@ public class ReplicaManager {
                 replyBody.setReply(branchServer.getBalance(requestMap.get("customerId")));
                 break;
             case CREATE_ACCOUNT_RECORD:
-                replyBody.setReply(branchServer.createAccountRecord(requestMap.get("managerId"), requestMap.get("firstName"),
-                        requestMap.get("lastName"), requestMap.get("address"),
-                        requestMap.get("phone"), requestMap.get("branch")));
+                replyBody.setReply(branchServer.createAccountRecord(requestMap.get("managerId"),
+                        requestMap.get("firstName"),
+                        requestMap.get("lastName"),
+                        requestMap.get("address"),
+                        requestMap.get("phone"),
+                        requestMap.get("branch")));
                 break;
             case EDIT_RECORD:
-                replyBody.setReply(branchServer.editRecord(requestMap.get("managerId"), requestMap.get("customerId"), requestMap.get("fieldName"), requestMap.get("newValue")));
+                replyBody.setReply(branchServer.editRecord(requestMap.get("managerId"),
+                        requestMap.get("customerId"),
+                        requestMap.get("fieldName"), 
+                        requestMap.get("newValue")));
                 break;
             case ERROR:
                 //TODO: Branch Error
