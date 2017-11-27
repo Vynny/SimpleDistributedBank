@@ -26,6 +26,7 @@ public class UDPListener extends Thread {
 		try {
 			socket = new DatagramSocket(null);
 			socket.setReuseAddress(true);
+			socket.setBroadcast(true);
 			socket.bind(new InetSocketAddress(port));
 		} catch (SocketException e) {
 			System.err.println("Unable to start the UDP Server");
@@ -39,6 +40,7 @@ public class UDPListener extends Thread {
 		this.id = id;
 		try {
 			socket = new DatagramSocket();
+			socket.setBroadcast(true);
 		} catch (SocketException e) {
 			System.err.println("Unable to start the UDP Server");
 			throw e;
@@ -119,6 +121,7 @@ public class UDPListener extends Thread {
 					DatagramSocket socket = null;
 					try {
 						socket = new DatagramSocket();
+						socket.setBroadcast(true);
 						socket.send(replyPacket);
 					} catch (SocketException e) {
 						e.printStackTrace();
