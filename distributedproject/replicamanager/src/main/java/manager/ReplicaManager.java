@@ -127,7 +127,7 @@ public class ReplicaManager {
             case EDIT_RECORD:
                 replyBody.setReply(branchServer.editRecord(requestMap.get("managerId"),
                         requestMap.get("customerId"),
-                        requestMap.get("fieldName"), 
+                        requestMap.get("fieldName"),
                         requestMap.get("newValue")));
                 break;
             case ERROR:
