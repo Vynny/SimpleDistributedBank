@@ -1,4 +1,4 @@
-package server.sylvain.server.impl;
+package server.sylvain;
 
 
 import server.Branch;

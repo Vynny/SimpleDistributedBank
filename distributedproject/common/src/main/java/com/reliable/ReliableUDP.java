@@ -4,9 +4,8 @@ import com.message.Message;
 import com.message.MessageBody;
 import com.message.MessageHeader;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.util.*;
@@ -27,8 +26,8 @@ public class ReliableUDP {
 	public ReliableUDP(String id) throws IOException {
 		this.id = id;
 
-		groupDb = buildGroupDb(new File(GROUPS_DB_FILENAME));
-		locationDb = buildLocationDb(new File(LOCATION_DB_FILENAME));
+		groupDb = buildGroupDb(ClassLoader.getSystemResourceAsStream(GROUPS_DB_FILENAME));
+		locationDb = buildLocationDb(ClassLoader.getSystemResourceAsStream(LOCATION_DB_FILENAME));
 
 		if (UDPHelper.ANONYMOUS_ID.equals(id)) {
 			listener = new UDPListener(id);
@@ -179,11 +178,11 @@ public class ReliableUDP {
 		return locationDb.get(id);
 	}
 
-	private Map<String, InetSocketAddress> buildLocationDb(File db) {
+	private Map<String, InetSocketAddress> buildLocationDb(InputStream db) {
 		Scanner sc = null;
 		try {
 			sc = new Scanner(db);
-		} catch (FileNotFoundException e) {
+		} catch (Exception e) {
 			System.err.println("Unable to open the locationDb");
 			return null;
 		}
@@ -198,11 +197,11 @@ public class ReliableUDP {
 		return map;
 	}
 
-	private Map<String, List<String>> buildGroupDb(File db) {
+	private Map<String, List<String>> buildGroupDb(InputStream db) {
 		Scanner sc = null;
 		try {
 			sc = new Scanner(db);
-		} catch (FileNotFoundException e) {
+		} catch (Exception e) {
 			System.err.println("Unable to open the groupDb");
 			return null;
 		}
