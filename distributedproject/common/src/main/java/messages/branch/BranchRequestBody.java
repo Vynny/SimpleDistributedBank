@@ -11,14 +11,32 @@ public class BranchRequestBody implements MessageBody {
         DEPOSIT,
         WITHDRAW,
         GET_BALANCE,
-
         CREATE_ACCOUNT_RECORD,
-        EDIT_RECORD
+        EDIT_RECORD,
+        ERROR
     }
 
     private OperationType operationType;
     private Map<String, String> requestMap;
 
+    
+    /*
+     * 
+     *-----------------
+     *Error operation
+     *----------------- 
+     * 
+     */
+    public BranchRequestBody notifyError(String originID, String errorType) {
+        requestMap = new HashMap<>();
+        operationType = OperationType.ERROR;
+
+        requestMap.put("originID", originID);
+        requestMap.put("errorType", errorType);
+
+        return this;
+    }
+    
     /*
      * -----------------
      * Client Operations
