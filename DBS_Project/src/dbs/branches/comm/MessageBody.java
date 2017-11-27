@@ -1,4 +1,4 @@
-package dbs.branches.message;
+package dbs.branches.comm;
 
 import java.io.Serializable;
 
