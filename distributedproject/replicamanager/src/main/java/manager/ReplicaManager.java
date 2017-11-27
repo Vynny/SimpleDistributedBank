@@ -6,7 +6,7 @@ import server.Branch;
 import server.BranchServer;
 import server.sylvain.BankServerRemoteImpl;
 
-import java.net.SocketException;
+import java.io.IOException;
 
 public class ReplicaManager {
 
@@ -51,7 +51,7 @@ public class ReplicaManager {
     private void startNetworking() {
         try {
             this.reliableUDP = new ReliableUDP(rmName);
-        } catch (SocketException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

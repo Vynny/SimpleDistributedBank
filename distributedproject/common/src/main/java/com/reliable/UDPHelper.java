@@ -9,6 +9,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
 public class UDPHelper {
+	public static final String ANONYMOUS_ID = "ANON";
 	public static final int MESSAGE_MAX_SIZE = 10240; // 10kbytes
 	public static final int RETRY_COUNT = 10;
 	public static final String REPLY_ACTION = "EmptyReply";
