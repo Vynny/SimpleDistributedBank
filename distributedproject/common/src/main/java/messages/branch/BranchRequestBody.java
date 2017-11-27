@@ -27,12 +27,20 @@ public class BranchRequestBody implements MessageBody {
      *----------------- 
      * 
      */
-    public BranchRequestBody notifyError(String originID, String errorType) {
+    public BranchRequestBody notifyCrashError(String originID1,String originID2) {
+        requestMap = new HashMap<>();
+        operationType = OperationType.ERROR;
+
+        requestMap.put("originID1", originID1);
+        requestMap.put("originID2", originID2);
+        return this;
+    }
+    
+    public BranchRequestBody notifyByzantineError(String originID) {
         requestMap = new HashMap<>();
         operationType = OperationType.ERROR;
 
         requestMap.put("originID", originID);
-        requestMap.put("errorType", errorType);
 
         return this;
     }

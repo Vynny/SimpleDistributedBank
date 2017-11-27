@@ -19,6 +19,7 @@ public class UDPClient extends Thread {
         }
         try {
             socket = new DatagramSocket();
+            socket.setBroadcast(true);
         } catch (SocketException e) {
             System.err.println("Unable to create a socket");
             e.printStackTrace();
