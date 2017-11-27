@@ -7,15 +7,15 @@ public class Main {
     public static void main(String[] args) {
 
         //Validate Args
-        if (args.length < 2) {
-            System.out.println("Usage: rm <implementation (RA,SY,MA)> <branch (BC,MB,NB,QC)>");
+        if (args.length < 3) {
+            System.out.println("Usage: rm <implementation (RA,SY,MA)> <branch (BC,MB,NB,QC)> <id>");
             System.exit(0);
         }
 
         //Set chosen manager implementation
         ServerImpl serverImpl = null;
 
-        String implChoice = args[1];
+        String implChoice = args[0];
         switch (implChoice.toUpperCase()) {
             case "RA":
                 serverImpl = ServerImpl.RADU;
@@ -37,7 +37,7 @@ public class Main {
         //Set chosen branch
         Branch branch = null;
 
-        String branchChoice = args[2];
+        String branchChoice = args[1];
         try {
             branch = Branch.valueOf(branchChoice);
         } catch (IllegalArgumentException e) {
@@ -45,8 +45,24 @@ public class Main {
             System.exit(0);
         }
 
-        //Start replica manager
-        ReplicaManager replicaManager = new ReplicaManager(branch, serverImpl);
+        //Set chosen replica manager id
+        int rmId = 0;
 
+        String idChoice = args[2];
+        try {
+            rmId = Integer.parseInt(idChoice);
+        } catch (NumberFormatException e) {
+            System.out.println("Error: ID must be an integer");
+            System.exit(0);
+        }
+
+        if (rmId > 3 || rmId < 1) {
+            System.out.println("Error: ID must be between 1 - 3");
+            System.exit(0);
+        }
+
+
+        //Start replica manager
+        ReplicaManager replicaManager = new ReplicaManager(rmId, branch, serverImpl);
     }
 }

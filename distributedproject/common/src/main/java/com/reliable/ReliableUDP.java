@@ -4,9 +4,8 @@ import com.message.Message;
 import com.message.MessageBody;
 import com.message.MessageHeader;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.util.*;
@@ -27,9 +26,9 @@ public class ReliableUDP {
 
     public ReliableUDP(String id) throws SocketException {
         this.id = id;
-
         groups = new HashSet<String>();
-        locationDb = buildLocationDb(new File(LOCATION_DB_FILENAME));
+
+        locationDb = buildLocationDb(ClassLoader.getSystemResourceAsStream(LOCATION_DB_FILENAME));
         listenerPort = getLocation(id).getPort();
     }
 
@@ -145,18 +144,20 @@ public class ReliableUDP {
         return locationDb.get(id);
     }
 
-    private Map<String, InetSocketAddress> buildLocationDb(File db) {
+    private Map<String, InetSocketAddress> buildLocationDb(InputStream db) {
         Scanner sc = null;
         try {
             sc = new Scanner(db);
-        } catch (FileNotFoundException e) {
+        } catch (Exception e) {
             System.err.println("Unable to open the locationDb");
             return null;
         }
 
         Map<String, InetSocketAddress> map = new HashMap<>();
         while (sc.hasNextLine()) {
-            String[] nextEntry = sc.nextLine().split(LOCATION_DELIMITER);
+            String line = sc.nextLine();
+            System.out.println("Line:" + line);
+            String[] nextEntry = line.split(LOCATION_DELIMITER);
             map.put(nextEntry[0], new InetSocketAddress(nextEntry[1], Integer.parseInt(nextEntry[2])));
         }
         sc.close();
