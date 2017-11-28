@@ -242,12 +242,14 @@ public class ReliableUDP {
 			return null;
 		}
 		String group = null;
-		while (sc.hasNextLine()) {
+		boolean foundGroup = false;
+		while (sc.hasNextLine() && !foundGroup) {
 			String[] nextEntry = sc.nextLine().split(CSV_DELIMITER);
 			group = nextEntry[0];
 
 			for (int i = 1; i < nextEntry.length; i++) {
 				if (id.equals(nextEntry[i])) {
+					foundGroup = true;
 					break;
 				}
 			}
