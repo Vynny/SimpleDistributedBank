@@ -12,9 +12,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class ReliableUDP {
-	private static final String LOCATION_DB_FILENAME = "location.db";
-	private static final String GROUPS_DB_FILENAME = "groups.db";
-	private static final String LOCATION_DELIMITER = ";";
+	private static final String LOCATION_DB_FILENAME = "location.csv";
+	private static final String GROUPS_DB_FILENAME = "groups.csv";
+	private static final String CSV_DELIMITER = ";";
 
 	private static long nextMessageSequenceNumber = 0;
 
@@ -22,7 +22,7 @@ public class ReliableUDP {
 
 	private UDPUnicastListener listener;
 	private Map<String, InetSocketAddress> locationDb;
-	private Map<String, List<String>> groupDb;
+	private Set<String> groups;
 
 	private ConcurrentLinkedQueue<Message> messageBuffer;
 
@@ -30,7 +30,7 @@ public class ReliableUDP {
 		this.id = id;
 		messageBuffer = new ConcurrentLinkedQueue<Message>();
 
-		groupDb = buildGroupDb(ClassLoader.getSystemResourceAsStream(GROUPS_DB_FILENAME));
+		groups = findGroupMembership(ClassLoader.getSystemResourceAsStream(GROUPS_DB_FILENAME));
 		locationDb = buildLocationDb(ClassLoader.getSystemResourceAsStream(LOCATION_DB_FILENAME));
 
 		if (UDPHelper.ANONYMOUS_ID.equals(id)) {
@@ -60,14 +60,14 @@ public class ReliableUDP {
 	 */
 	public void send(MessageBody body, String action, String destinationId, String customId) throws IOException {
 		Message message = buildMessage(action, body, destinationId, customId);
-		UDPClient client = new UDPClient(message);
+		UDPUnicastClient client = new UDPUnicastClient(message);
 
 		client.start();
 	}
 
 	public void reply(MessageHeader originHeader, MessageBody replyBody, String action) throws SocketException {
 		Message message = buildReplyMessage(originHeader, action, replyBody);
-		UDPClient client = new UDPClient(message);
+		UDPUnicastClient client = new UDPUnicastClient(message);
 
 		client.start();
 	}
@@ -79,7 +79,8 @@ public class ReliableUDP {
 	 * @param destinationId
 	 */
 	public void send(Message message, String destinationId) {
-
+		// TODO method stub
+		throw new UnsupportedOperationException("Method Stub");
 	}
 
 	/**
@@ -103,7 +104,8 @@ public class ReliableUDP {
 	 * @param customId
 	 */
 	public void multicast(MessageBody body, String action, String groupId, String customId) {
-
+		// TODO method stub
+		throw new UnsupportedOperationException("Method Stub");
 	}
 
 	/**
@@ -113,7 +115,8 @@ public class ReliableUDP {
 	 * @param groupId
 	 */
 	public void multicast(Message message, String groupId) {
-
+		// TODO method stub
+		throw new UnsupportedOperationException("Method Stub");
 	}
 
 	private Message buildMessage(String action, MessageBody body, String destinationId, String customId) {
@@ -188,7 +191,7 @@ public class ReliableUDP {
 
 		Map<String, InetSocketAddress> map = new HashMap<>();
 		while (sc.hasNextLine()) {
-			String[] nextEntry = sc.nextLine().split(LOCATION_DELIMITER);
+			String[] nextEntry = sc.nextLine().split(CSV_DELIMITER);
 			map.put(nextEntry[0], new InetSocketAddress(nextEntry[1], Integer.parseInt(nextEntry[2])));
 		}
 		sc.close();
@@ -196,7 +199,7 @@ public class ReliableUDP {
 		return map;
 	}
 
-	private Map<String, List<String>> buildGroupDb(InputStream db) {
+	private Set<String> findGroupMembership(InputStream db) {
 		Scanner sc = null;
 		try {
 			sc = new Scanner(db);
@@ -204,17 +207,19 @@ public class ReliableUDP {
 			System.err.println("Unable to open the groupDb");
 			return null;
 		}
-		Map<String, List<String>> map = new HashMap<>();
+		Set<String> groups = new HashSet<>();
 		while (sc.hasNextLine()) {
-			String[] nextEntry = sc.nextLine().split(LOCATION_DELIMITER);
-			List<String> groupMembers = new LinkedList<String>();
+			String[] nextEntry = sc.nextLine().split(CSV_DELIMITER);
+			String group = nextEntry[0];
+
 			for (int i = 1; i < nextEntry.length; i++) {
-				groupMembers.add(nextEntry[i]);
+				if (id.equals(nextEntry[i])) {
+					groups.add(group);
+				}
 			}
-			map.put(nextEntry[0], groupMembers);
 		}
 		sc.close();
 
-		return map;
+		return groups;
 	}
 }

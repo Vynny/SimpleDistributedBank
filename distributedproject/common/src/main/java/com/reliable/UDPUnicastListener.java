@@ -28,8 +28,10 @@ public class UDPUnicastListener extends Thread {
 		}
 
 		try {
-			if (port < 0) {
+			if (port >= 0) {
 				socket = new DatagramSocket(port);
+			} else {
+				socket = new DatagramSocket();
 			}
 		} catch (SocketException e) {
 			System.err.println("Unable to start the UDP Server");
@@ -40,14 +42,7 @@ public class UDPUnicastListener extends Thread {
 	}
 
 	public UDPUnicastListener(ConcurrentLinkedQueue<Message> messageBuffer, String id) throws SocketException {
-		this.id = id;
-		try {
-			socket = new DatagramSocket();
-		} catch (SocketException e) {
-			System.err.println("Unable to start the UDP Server");
-			throw e;
-		}
-		this.messageBuffer = messageBuffer;
+		this(messageBuffer, id, -1);
 	}
 
 	public void run() {
@@ -66,7 +61,6 @@ public class UDPUnicastListener extends Thread {
 			}
 
 			// Drop message if this isn't its destination
-			// TODO add group check
 			if (!id.equals(requestMessage.getHeader().destinationId)) {
 				continue;
 			} else {
@@ -104,9 +98,6 @@ public class UDPUnicastListener extends Thread {
 					try {
 						socket = new DatagramSocket();
 						socket.send(replyPacket);
-					} catch (SocketException e) {
-						e.printStackTrace();
-						continue;
 					} catch (IOException e) {
 						e.printStackTrace();
 						continue;

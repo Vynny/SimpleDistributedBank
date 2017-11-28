@@ -78,7 +78,7 @@ public class ReplicaManager {
             //Incoming
             Message inMessage = reliableUDP.receive();
             if (inMessage != null) {
-                System.out.println("Message Received: " + inMessage.getHeader().sequenceId);
+                System.out.println("Message Received: " + inMessage.getHeader().messageId);
                 processMessage(inMessage);
             }
 

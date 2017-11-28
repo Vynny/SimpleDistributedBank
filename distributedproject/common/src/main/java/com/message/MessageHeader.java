@@ -1,6 +1,7 @@
 package com.message;
 
 import java.io.Serializable;
+import java.util.Map;
 
 public class MessageHeader implements Serializable {
 
@@ -12,9 +13,9 @@ public class MessageHeader implements Serializable {
 	public String messageId;
 
 	/**
-	 * Id for total ordering
+	 * Multicast Number
 	 */
-	public String sequenceId;
+	public long sequenceNumber;
 
 	/**
 	 * Custom Id for meaningful replies for application specific use.
@@ -23,7 +24,6 @@ public class MessageHeader implements Serializable {
 
 	public boolean isReply;
 	public boolean isAck;
-	public boolean isTotallyOrdered;
 
 	// Used to send back a reply to a different listener than the socket this
 	// message was sent from
@@ -35,7 +35,10 @@ public class MessageHeader implements Serializable {
 	public String destinationId;
 	public String destinationAddress;
 	public int destinationPort;
-
+	
+	// PiggyBack acks for Reliable Multicast
+	public Map<String, Long> acks;
+	
 	public MessageHeader() {
 		// TODO Auto-generated constructor stub
 	}

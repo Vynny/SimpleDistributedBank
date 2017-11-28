@@ -8,12 +8,12 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 
-public class UDPClient extends Thread {
+public class UDPUnicastClient extends Thread {
     private DatagramSocket socket;
     private DatagramPacket request;
     private Message initialMessage;
 
-    public UDPClient(Message message) throws SocketException {
+    public UDPUnicastClient(Message message) throws SocketException {
         if (message == null) {
             throw new IllegalArgumentException("message cannot be null");
         }
