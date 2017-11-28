@@ -2,7 +2,7 @@ package server.sylvain.server.udp;
 
 
 import server.Branch;
-import server.sylvain.common.logging.BankLogger;
+import logging.BankLogger;
 import server.sylvain.common.models.user.CustomerUser;
 import server.sylvain.common.models.user.ManagerUser;
 import server.sylvain.common.remote.udp.UDPHelper;

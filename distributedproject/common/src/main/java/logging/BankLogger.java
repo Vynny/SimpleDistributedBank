@@ -1,4 +1,4 @@
-package server.sylvain.common.logging;
+package logging;
 
 import java.io.File;
 import java.io.IOException;

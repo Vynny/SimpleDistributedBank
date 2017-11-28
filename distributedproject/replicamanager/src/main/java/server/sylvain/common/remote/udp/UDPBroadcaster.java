@@ -1,7 +1,7 @@
 package server.sylvain.common.remote.udp;
 
 import server.Branch;
-import server.sylvain.common.logging.BankLogger;
+import logging.BankLogger;
 
 import java.io.IOException;
 import java.net.DatagramPacket;

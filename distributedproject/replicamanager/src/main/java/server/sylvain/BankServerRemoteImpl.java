@@ -3,7 +3,7 @@ package server.sylvain;
 
 import server.Branch;
 import server.BranchServer;
-import server.sylvain.common.logging.BankLogger;
+import logging.BankLogger;
 import server.sylvain.common.models.account.BankAccount;
 import server.sylvain.common.models.user.CustomerUser;
 import server.sylvain.common.models.user.ManagerUser;
