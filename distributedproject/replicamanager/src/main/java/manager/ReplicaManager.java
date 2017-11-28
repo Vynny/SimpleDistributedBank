@@ -8,7 +8,7 @@ import messages.branch.BranchReplyBody;
 import messages.branch.BranchRequestBody;
 import server.Branch;
 import server.BranchServer;
-import server.sylvain.BankServerRemoteImpl;
+import server.sylvain.SylvainBranchImpl;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -53,7 +53,7 @@ public class ReplicaManager {
             case RADU:
                 break;
             case SYLVAIN:
-                this.branchServer = new BankServerRemoteImpl(branch);
+                this.branchServer = new SylvainBranchImpl(branch);
                 break;
             case MATHIEU:
                 break;

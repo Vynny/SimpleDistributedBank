@@ -13,13 +13,13 @@ import server.sylvain.server.database.ManagerDatabase;
 import java.math.BigDecimal;
 
 
-public class BankServerRemoteImpl implements BranchServer {
+public class SylvainBranchImpl implements BranchServer {
 
     private Branch thisBranch;
     private CustomerDatabase customerDatabase;
     private ManagerDatabase managerDatabase;
 
-    public BankServerRemoteImpl(Branch thisBranch) {
+    public SylvainBranchImpl(Branch thisBranch) {
         this.thisBranch = thisBranch;
 
         //Initialize Databases
