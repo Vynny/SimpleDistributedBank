@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.SocketAddress;
 import java.net.SocketException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -53,6 +54,7 @@ public class UDPMulticast extends Thread {
 		this.groupId = groupId;
 		this.messageBuffer = messageBuffer;
 		this.holdBackQueues = new HashMap<>();
+		this.lastReceivedSequenceNumbers = Collections.synchronizedMap(new HashMap<>());
 	}
 
 	public void multicast(Message message) {
@@ -84,15 +86,6 @@ public class UDPMulticast extends Thread {
 			}
 		}.start();
 	}
-
-	// public void totalOrderMulticast(Message message) {
-	// if (message == null) {
-	// throw new IllegalArgumentException("Message cannot be null");
-	// }
-	// message.getHeader().isTotallyOrdered = true;
-	// message.getHeader().totalOrderSequenceId = getNextTotalOrderSequenceId();
-	// multicast(message);
-	// }
 
 	public void run() {
 		while (true) {
@@ -130,7 +123,7 @@ public class UDPMulticast extends Thread {
 			addMessageToHoldBackQueue(requestMessage);
 		}
 		deliverFromHoldBackQueue(requestHeader.originId, lastSequenceFromSender);
-		
+
 		// Check if we're missing message from the group
 		handleMissingMessageFromGroup(requestHeader);
 	}
@@ -147,6 +140,7 @@ public class UDPMulticast extends Thread {
 
 		if (hasDelivered) {
 			lastReceivedSequenceNumbers.put(originId, lastSequenceNumber);
+
 		}
 	}
 
