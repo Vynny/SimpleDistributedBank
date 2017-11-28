@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.SocketException;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -17,10 +18,28 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.message.Message;
 import com.message.MessageHeader;
+import com.message.NACKBody;
 
 public class UDPMulticast extends Thread {
+	private static final Comparator<Message> MESSAGE_SEQUENCE_COMPARATOR = new Comparator<Message>() {
+		@Override
+		public int compare(Message m1, Message m2) {
+			MessageHeader m1Header = m1.getHeader();
+			MessageHeader m2Header = m2.getHeader();
+			if (m1Header.sequenceNumber < m2Header.sequenceNumber) {
+				return -1;
+			} else if (m1Header.sequenceNumber == m2Header.sequenceNumber) {
+				return 0;
+			} else {
+				return 1;
+			}
+		}
+	};
+
 	private MulticastSocket socket;
 	private String groupId;
+	private InetAddress group;
+	private int groupPort;
 	private ConcurrentLinkedQueue<Message> messageBuffer;
 
 	/**
@@ -51,6 +70,8 @@ public class UDPMulticast extends Thread {
 		}
 
 		this.groupId = groupId;
+		this.groupPort = port;
+		this.group = group;
 		this.messageBuffer = messageBuffer;
 		this.holdBackQueues = new HashMap<>();
 		this.lastReceivedSequenceNumbers = Collections.synchronizedMap(new HashMap<>());
@@ -152,15 +173,43 @@ public class UDPMulticast extends Thread {
 	}
 
 	private void requestMissingMessages(String originId, long first, long last) {
-		// TODO Auto-generated method stub
+		new Thread() {
+			public void run() {
+				Message message = buildNackMessage(originId, first, last);
+				DatagramPacket requestPacket = UDPHelper.buildDatagramPacket(message);
 
+				DatagramSocket socket = null;
+				try {
+					socket = new DatagramSocket();
+					socket.send(requestPacket);
+				} catch (IOException e) {
+					System.err.println("Unable to multicast request");
+					e.printStackTrace();
+					return;
+				}
+				socket.close();
+			}
+		}.start();
+	}
+
+	private Message buildNackMessage(String originId, long first, long last) {
+		MessageHeader header = new MessageHeader();
+		header.messageId = "NACK";
+		header.destinationId = groupId;
+		header.destinationAddress = group.getHostAddress();
+		header.destinationPort = groupPort;
+
+		NACKBody body = new NACKBody(originId, first, last);
+		Message message = new Message(UDPHelper.NACK_ACTION, header, body);
+
+		return message;
 	}
 
 	private void addMessageToHoldBackQueue(Message message) {
 		PriorityQueue<Message> queue = holdBackQueues.get(message.getHeader().originId);
 		if (queue == null) {
-			queue = new PriorityQueue<>();
-			// TODO comparator
+			queue = new PriorityQueue<Message>(MESSAGE_SEQUENCE_COMPARATOR);
+			holdBackQueues.put(message.getHeader().originId, queue);
 		}
 		if (!queue.contains(message)) {
 			queue.add(message);
@@ -168,7 +217,7 @@ public class UDPMulticast extends Thread {
 	}
 
 	private void handleMissingMessageFromGroup(MessageHeader requestHeader) {
-		// TODO Auto-generated method stub
+		// TODO If necessary, only if members other than sequencer need to multicast
 
 	}
 

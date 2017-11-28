@@ -31,6 +31,11 @@ public class TestDriverUDP {
 		replyTest21.setReply("From test2 to Test1");
 		udpModule2.send(replyTest21, "test", "test1", null);
 
+		udpModule1.startUDPMulticast();
+		BranchReplyBody replyTestMC = new BranchReplyBody();
+		replyTestMC.setReply("MC Test");
+		udpModule1.multicast(replyTestMC, "test", null);
+
 		while (true) {
 			Message test1 = udpModule1.receive();
 			if (test1 != null) {

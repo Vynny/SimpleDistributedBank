@@ -21,8 +21,9 @@ public class ReliableUDP {
 	private final String id;
 
 	private UDPUnicastListener listener;
+	private UDPMulticast udpMulticast;
 	private Map<String, InetSocketAddress> locationDb;
-	private Set<String> groups;
+	private String groupId;
 
 	private ConcurrentLinkedQueue<Message> messageBuffer;
 
@@ -30,7 +31,7 @@ public class ReliableUDP {
 		this.id = id;
 		messageBuffer = new ConcurrentLinkedQueue<Message>();
 
-		groups = findGroupMembership(ClassLoader.getSystemResourceAsStream(GROUPS_DB_FILENAME));
+		groupId = findGroupMembership(ClassLoader.getSystemResourceAsStream(GROUPS_DB_FILENAME));
 		locationDb = buildLocationDb(ClassLoader.getSystemResourceAsStream(LOCATION_DB_FILENAME));
 
 		if (UDPHelper.ANONYMOUS_ID.equals(id)) {
@@ -48,6 +49,15 @@ public class ReliableUDP {
 	 */
 	public ReliableUDP() throws IOException {
 		this(UDPHelper.ANONYMOUS_ID);
+	}
+
+	public void startUDPMulticast() throws IOException {
+		if (groupId == null) {
+			throw new IOException("This module does not belong to a group");
+		}
+		InetSocketAddress location = locationDb.get(groupId);
+		udpMulticast = new UDPMulticast(messageBuffer, groupId, location.getAddress(), location.getPort());
+		udpMulticast.start();
 	}
 
 	/**
@@ -100,23 +110,28 @@ public class ReliableUDP {
 	 *
 	 * @param body
 	 * @param action
-	 * @param groupId
 	 * @param customId
 	 */
-	public void multicast(MessageBody body, String action, String groupId, String customId) {
-		// TODO method stub
-		throw new UnsupportedOperationException("Method Stub");
+	public void multicast(MessageBody body, String action, String customId) {
+		if (udpMulticast == null) {
+			throw new UnsupportedOperationException("UDP Multicast isn't started");
+		}
+
+		udpMulticast.multicast(buildMulticastMessage(action, body, customId));
 	}
 
 	/**
 	 * Forwards an existing message to a new destination.
 	 *
 	 * @param message
-	 * @param groupId
 	 */
-	public void multicast(Message message, String groupId) {
-		// TODO method stub
-		throw new UnsupportedOperationException("Method Stub");
+	public void multicast(Message message) {
+		if (udpMulticast == null) {
+			throw new UnsupportedOperationException("UDP Multicast isn't started");
+		}
+
+		setForwardMulticastHeader(message.getHeader(), groupId);
+		udpMulticast.multicast(message);
 	}
 
 	private Message buildMessage(String action, MessageBody body, String destinationId, String customId) {
@@ -128,6 +143,14 @@ public class ReliableUDP {
 
 	private Message buildReplyMessage(MessageHeader origin, String action, MessageBody body) {
 		MessageHeader header = buildReplyHeader(origin);
+		Message message = new Message(action, header, body);
+
+		return message;
+	}
+
+	private Message buildMulticastMessage(String action, MessageBody body, String customId) {
+		MessageHeader header = buildHeader(groupId, customId);
+		header.group = groupId;
 		Message message = new Message(action, header, body);
 
 		return message;
@@ -172,6 +195,14 @@ public class ReliableUDP {
 		return header;
 	}
 
+	private void setForwardMulticastHeader(MessageHeader header, String destinationId) {
+		InetSocketAddress destinationLocation = getLocation(destinationId);
+		header.group = groupId;
+		header.destinationId = destinationId;
+		header.destinationAddress = destinationLocation.getAddress().getHostAddress();
+		header.destinationPort = destinationLocation.getPort();
+	}
+
 	private String getNextMessageId() {
 		return id + nextMessageSequenceNumber++;
 	}
@@ -199,7 +230,7 @@ public class ReliableUDP {
 		return map;
 	}
 
-	private Set<String> findGroupMembership(InputStream db) {
+	private String findGroupMembership(InputStream db) {
 		Scanner sc = null;
 		try {
 			sc = new Scanner(db);
@@ -207,19 +238,19 @@ public class ReliableUDP {
 			System.err.println("Unable to open the groupDb");
 			return null;
 		}
-		Set<String> groups = new HashSet<>();
+		String group = null;
 		while (sc.hasNextLine()) {
 			String[] nextEntry = sc.nextLine().split(CSV_DELIMITER);
-			String group = nextEntry[0];
+			group = nextEntry[0];
 
 			for (int i = 1; i < nextEntry.length; i++) {
 				if (id.equals(nextEntry[i])) {
-					groups.add(group);
+					break;
 				}
 			}
 		}
 		sc.close();
 
-		return groups;
+		return group;
 	}
 }
