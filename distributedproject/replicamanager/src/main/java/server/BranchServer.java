@@ -19,8 +19,6 @@ public interface BranchServer {
      * Case: Trying to create a customer for a non existent branch
      * return: "You have entered an invalid branch"
      *
-     * Case: Invalid manager ID (IE QC manager trying to create MB branch customer. MB used in this example)
-     * return: "Manager with id managerId is not authorized to run operations on MB's server"
      */
     String createAccountRecord(String managerId, String firstName, String lastName, String address, String phone, String branch);
 
