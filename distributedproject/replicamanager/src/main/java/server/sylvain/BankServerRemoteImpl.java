@@ -46,23 +46,15 @@ public class BankServerRemoteImpl implements BranchServer {
         BankLogger.logAction("\tBranch: " + branch);
 
         String response;
-        ManagerUser managerUser = managerDatabase.getManager(managerId);
-        if (managerUser != null) {
-            try {
-                Branch branchEnum = Branch.valueOf(branch);
+        try {
+            Branch branchEnum = Branch.valueOf(branch);
 
-                if (branchEnum.toString().equals(managerUser.getManagerId().substring(0, 2))) {
-                    CustomerUser customerUser = new CustomerUser(branchEnum, firstName, lastName, address, phone);
-                    this.customerDatabase.addCustomer(customerUser);
-                    response = BankLogger.logAndReturn("Successfully created new customer and added to customer database. Customer id: " + customerUser.getCustomerId());
-                } else {
-                    response = BankLogger.logAndReturn("Manager with id " + managerId + " is not authorized to run operations on " + branchEnum + "'s server");
-                }
-            } catch (IllegalArgumentException e) {
-                response = BankLogger.logAndReturn("You have entered an invalid branch");
-            }
-        } else {
-            response = BankLogger.logAndReturn("Could not find manager with id: " + managerId);
+            CustomerUser customerUser = new CustomerUser(branchEnum, firstName, lastName, address, phone);
+            this.customerDatabase.addCustomer(customerUser);
+            response = BankLogger.logAndReturn("Successfully created new customer and added to customer database. Customer id: " + customerUser.getCustomerId());
+
+        } catch (IllegalArgumentException e) {
+            response = BankLogger.logAndReturn("You have entered an invalid branch");
         }
 
         return response;
@@ -77,27 +69,23 @@ public class BankServerRemoteImpl implements BranchServer {
         BankLogger.logAction("\tNew Value: " + newValue);
 
         String response;
-        ManagerUser managerUser = managerDatabase.getManager(managerId);
-        if (managerUser != null) {
-            CustomerUser customerUser = customerDatabase.getCustomer(customerId);
-            if (customerUser != null) {
-                switch (fieldName.toLowerCase()) {
-                    case "address":
-                        customerUser.setAddress(newValue);
-                        break;
-                    case "phone":
-                        customerUser.setPhoneNumber(newValue);
-                        break;
-                    default:
-                        return BankLogger.logAndReturn("Field name must be one of (address|phone)");
-                }
 
-                response = BankLogger.logAndReturn("Changed field " + fieldName + " to " + newValue + " for customer with id " + customerId);
-            } else {
-                response = BankLogger.logAndReturn("Could not find customer with id: " + customerId);
+        CustomerUser customerUser = customerDatabase.getCustomer(customerId);
+        if (customerUser != null) {
+            switch (fieldName.toLowerCase()) {
+                case "address":
+                    customerUser.setAddress(newValue);
+                    break;
+                case "phone":
+                    customerUser.setPhoneNumber(newValue);
+                    break;
+                default:
+                    return BankLogger.logAndReturn("Field name must be one of (address|phone)");
             }
+
+            response = BankLogger.logAndReturn("Changed field " + fieldName + " to " + newValue + " for customer with id " + customerId);
         } else {
-            response = BankLogger.logAndReturn("Could not find manager with id " + managerId);
+            response = BankLogger.logAndReturn("Could not find customer with id: " + customerId);
         }
 
         return response;

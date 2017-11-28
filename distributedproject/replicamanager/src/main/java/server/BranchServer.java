@@ -19,11 +19,6 @@ public interface BranchServer {
      * Case: Trying to create a customer for a non existent branch
      * return: "You have entered an invalid branch"
      *
-     * Case: Manager not found
-     * return: "Could not find manager with id managerId"
-     *
-     * Case: Invalid manager ID (IE QC manager trying to create MB branch customer. MB used in this example)
-     * return: "Manager with id managerId is not authorized to run operations on MB's server"
      */
     String createAccountRecord(String managerId, String firstName, String lastName, String address, String phone, String branch);
 
@@ -35,9 +30,6 @@ public interface BranchServer {
      *
      * Case: Bad field name
      * return: "Field name must be one of (address|phone)"
-     *
-     * Case: Manager not found
-     * return: "Could not find manager with id managerId"
      *
      * Case: Customer not found
      * return: "Could not find customer with id customerId"
