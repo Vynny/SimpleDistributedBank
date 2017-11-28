@@ -1,5 +1,6 @@
 package server.radu;
 
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -7,10 +8,16 @@ import java.util.List;
 import java.util.Random;
 import java.net.*;
 import java.io.*;
-public class ClientImpl{
+import server.BranchServer;
+public class ClientImpl implements BranchServer {
 	 ServerDatabase ser;
 	  private int port;
+	  NumberFormat formatter;
 	  
+	  public ClientImpl(String branch) {
+		  ser = new ServerDatabase(branch);
+		  formatter = NumberFormat.getCurrencyInstance();
+	  }
 	  public void setDatabase(ServerDatabase db) {
 		    ser = db; 
 
@@ -30,7 +37,7 @@ public class ClientImpl{
 			   , String phone, String branch) {
 		   String retMessage = "Failed to create a new account";
 		   if (!(branch.equals("QC") || branch.equals("BC") || branch.equals("MB") || branch.equals("NB"))) {
-			   return "Invalid branch." + retMessage;
+			   return "You have entered an invalid branch";
 		   }
 		   List<String> s = new ArrayList<String>();
 		   String ID = branch + "C";
@@ -47,7 +54,7 @@ public class ClientImpl{
 		   if (b) {
 			   String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(Calendar.getInstance().getTime());
 			   ser.trackOperation("A new account with ID " + ID + " has been created. Date: " + timeStamp);
-			   retMessage = "Success in creating a new account with ID " + ID;
+			   retMessage = "Successfully created new customer and added to customer database. Customer id " + ID;
 			   
 		   }
 		   return retMessage;
@@ -56,26 +63,34 @@ public class ClientImpl{
 		   List<String> userInfo = ser.getClientList(customerID);
 		   String retMessage = "Failed to edit record";
 		   String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(Calendar.getInstance().getTime());
+		  if (!ser.userIDExists(managerID))
+			  return "Could not find manager with id " + managerID;
+		  if (!ser.userIDExists(customerID))
+			  return "Could not find manager with id " + customerID;
 		  
 		   if (fieldName.equals("address")) {
 			   userInfo.set(5,newValue);
 			   ser.updateClientList(userInfo);
-			   retMessage = "Updated the address of the customer.";
+			   retMessage = "Changed field + "  + fieldName + " to newValue for customer with id " + customerID;
 			   ser.trackOperation("A new account with ID " + customerID + " has had its address edited. Date: " + timeStamp);
 		   }
 		   else if (fieldName.equals("phone")) {
 			   userInfo.set(6,newValue);
 			   ser.updateClientList(userInfo);
-			   retMessage = "Updated the phone of the customer";
+			   retMessage = "Changed field + "  + fieldName + " to newValue for customer with id " + customerID;
 			   ser.trackOperation("A new account with ID " + customerID + " has had its phone edited. Date: " + timeStamp);
 		   }
+		   else {
+			   return "Field name must be one of (address|phone)";
+		   }
+		   /*
 		   else if (fieldName.equals("branch") && (newValue.equals("QC") || newValue.equals("BC") || 
 				   newValue.equals("MB") || newValue.equals("NB"))) {
 			   userInfo.set(2,newValue);
 			   ser.updateClientList(userInfo);
 			   retMessage = "Updated the branch of the customer";
 			   ser.trackOperation("A new account with ID " + customerID + " has had its branch edited. Date: " + timeStamp);
-		   }
+		   }*/
 		   return retMessage;
 	   }
 	   public String getAccountCount(String managerID) {
@@ -128,7 +143,7 @@ public class ClientImpl{
 		   return ret;
 	   }
 	   
-	   public String transferFundManager (String managerID,int amount, String sourceCustomerID,String destinationCustomerID) {
+	   public String transferFundManager (String managerID,String amount, String sourceCustomerID,String destinationCustomerID) {
 		   String ret = "";
 		   if (ser.userIDExists(managerID)) {
 			   
@@ -158,10 +173,10 @@ public class ClientImpl{
 			      String second = contents[1];
 			      
 			      String destBranch = contents[2];
-			      int amount = Integer.parseInt(second);
+			      double amount = Double.parseDouble(second);
 			      String re= "Success";
 			      if (!first.equals("count") && ser.userIDExists(first))
-			    	  deposit(first, amount);
+			    	  deposit(first, String.valueOf(amount));
 			      else if (!first.equals("count"))
 			    	  re = "Destination ID doesn't exist.,";
 			      else if (first.equals("count")) {
@@ -190,7 +205,7 @@ public class ClientImpl{
 		   			}
 		   UDPListener();
 	   }
-	   public String transferFund(String sourceCustomerID,int amount,String destinationCustomerID) {
+	   public String transferFund(String sourceCustomerID,String amount,String destinationCustomerID) {
 		   DatagramSocket aSocket = null;
 		   String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(Calendar.getInstance().getTime());
 		   
@@ -206,7 +221,7 @@ public class ClientImpl{
 		   if (reply.equals("Withdraw succesful")) {
 		   try {
 			      aSocket = new DatagramSocket();
-			      String info = destinationCustomerID + "," +  Integer.toString(amount) + "," + ser.branch + ",";
+			      String info = destinationCustomerID + "," +  amount + "," + ser.branch + ",";
 			      String destBranch = destinationCustomerID.substring(0,2);
 			      
 			      byte [] m = info.getBytes();
@@ -260,74 +275,85 @@ public class ClientImpl{
 		   }
 		   return ret;
 	   }
-	   public String deposit(String customerID,int amount) {
+	   public String deposit(String customerID,String amount) {
+		   if (Double.parseDouble(amount) <= 0)
+			   return "Cannot deposit a negative amount or $0.";
 		   if (ser.userIDExists(customerID)) {
 			   List<String> userInfo = ser.getClientList(customerID);
 			   System.out.println(userInfo.get(1));
-			   int currentBalance = Integer.parseInt(userInfo.get(1));
-			   currentBalance += amount;
-			   userInfo.set(1, Integer.toString(currentBalance));
+			   double currentBalance = Double.parseDouble(userInfo.get(1));
+			   currentBalance += Double.parseDouble(amount);
+			   userInfo.set(1, Double.toString(currentBalance));
 			   boolean op = ser.updateClientList(userInfo);
 			   if (op) {
 				   String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(Calendar.getInstance().getTime());
 				   ser.trackOperation("The client with ID " + customerID + ", known as " + userInfo.get(3) + " " + userInfo.get(4) + 
 						   ", has made a deposit of " + amount + " into their account. Date: " + timeStamp);
 				   
-				   return "Deposit succesful";
+				   return "Deposited $" + amount + " into your account (" + customerID + ")."
+				   		+ " New Balance: " + formatter.format(currentBalance);
 				   
 			   }
-			   else {
+			  /* else {
 				   String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(Calendar.getInstance().getTime());
 				   ser.trackOperation("The client with ID " + customerID + ", known as " + userInfo.get(3) + " " + userInfo.get(4) + 
 						   ", has failed to make a deposit of " + amount + " into their account. Date: " + timeStamp);
 				   return "Deposit failed";
-			   }
-		   } else {
-			   return "User ID doesn't exist.";
+			   }*/
 		   }
+		   return "Could not find customer with id " + customerID;
+		   
 	   }
-	   public String withdraw(String customerID, int amount) {
+	   public String withdraw(String customerID, String amount) {
+		   if (Double.parseDouble(amount) <= 0)
+			   return "Cannot withdraw a negative amount or $0.";
+		   
 		   if (ser.userIDExists(customerID)) {
 			   String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(Calendar.getInstance().getTime());
 			   List<String> userInfo = ser.getClientList(customerID);
-			   int currentBalance = Integer.parseInt(userInfo.get(1));
-			   if (currentBalance < amount) {
+			   double currentBalance = Double.parseDouble(userInfo.get(1));
+			   if (currentBalance < Double.parseDouble(amount)) {
 				   
 				   ser.trackOperation("The client with ID " + customerID + ", known as " + userInfo.get(3) + " " + userInfo.get(4) + 
 						   ", has failed to withdraw " + amount + " from their account because they don't have enough funds. Date: " + timeStamp);
-				   return "Not enough funds.";
+				   return "You do not have enough funds to withdraw " + formatter.format(Double.parseDouble(amount)) + "."
+			   		+ "Your balance is " + formatter.format(currentBalance);
 				   
 			   }
 			   else {
-				   currentBalance -= amount;
-				   userInfo.set(1, Integer.toString(currentBalance));
+				   currentBalance -= Double.parseDouble(amount);
+				   userInfo.set(1, Double.toString(currentBalance));
 				   boolean op = ser.updateClientList(userInfo);
 				   if (op) {
 					   ser.trackOperation("The client with ID " + customerID + ", known as " + userInfo.get(3) + " " + userInfo.get(4) + 
 							   ", has made a withdrawl of " + amount + " from their account. Date: " + timeStamp);
-					   return "Withdraw succesful";
+					   return "Withdrew " + formatter.format(Double.parseDouble(amount)) + " from your account"
+					   		+ " (" + customerID + "). New Balance: " + formatter.format(currentBalance);
 				   }
-				   else {
+				   /*else {
 					   ser.trackOperation("The client with ID " + customerID + ", known as " + userInfo.get(3) + " " + userInfo.get(4) + 
 							   ", has failed to withdraw " + amount + " from their account. Date: " + timeStamp);
-					   return "Withdraw failed";
-				   }
+					   return "";
+				   }*/
 			   }
-		   } else {
-			   return "User ID doesn't exist.";
 		   }
+		   return "Could not find customer with id " + customerID;
 	   }
-	   public int getBalance(String customerID) {
+	   public String getBalance(String customerID) {
 		   if (ser.userIDExists(customerID)) {
 			   List<String> userInfo = ser.getClientList(customerID);
-			   int currentBalance = Integer.parseInt(userInfo.get(1));
+			   
+			   double currentBalance = Double.parseDouble(userInfo.get(1));
 			   System.out.println("current balance: " + currentBalance);
 			   String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(Calendar.getInstance().getTime());
 			   ser.trackOperation("The client with ID " + customerID + ", known as " + userInfo.get(3) + " " + userInfo.get(4) + 
 					   ", has checked their account. Date: " + timeStamp);
-			   return currentBalance;
+			   
+			   
+			   String ret = "Account Balance for Customer customerId: " + formatter.format(currentBalance);
+			   return ret;
 		   } else {
-			   return 0;
+			   return "Could not find customer with id " + customerID;
 		   }
 	   }
 }

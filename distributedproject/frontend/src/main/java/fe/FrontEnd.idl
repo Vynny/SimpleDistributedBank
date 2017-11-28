@@ -4,10 +4,10 @@ module FEPackage
   interface FrontEnd
   {
   
-  	string deposit(in string customerID,in long amount);
-  	string withdraw(in string customerID,in long amount);
-  	long getBalance(in string customerID);
-  	string transferFund(in string sourceCustomerID,in long amount,in string destinationCustomerID);
+  	string deposit(in string customerID,in string amount);
+  	string withdraw(in string customerID,in string amount);
+  	string getBalance(in string customerID);
+  	string transferFund(in string sourceCustomerID,in string amount,in string destinationCustomerID);
   	
   	
   	string createAccountRecord(in string managerID,in string firstName,in string lastName,in string address,in string phone,in string branch);
@@ -15,7 +15,7 @@ module FEPackage
   	string getAccountCount(in string managerID);
   	
   	
-  	string transferFundManager(in string managerID,in long amount,in string sourceCustomerID,in string destinationCustomerID);
+  	string transferFundManager(in string managerID,in string amount,in string sourceCustomerID,in string destinationCustomerID);
   	oneway void shutdown();
   };
   

@@ -77,7 +77,7 @@ public class Client {
             if (choice == 1) {
                 System.out.println("Please enter the amount you wish to deposit.");
                 int amount = Integer.parseInt(br.readLine());
-                String serverResponse = fe.deposit(ID, amount);
+                String serverResponse = fe.deposit(ID, String.valueOf(amount));
                 System.out.println(serverResponse);
                 String message = "The user has made a deposit. The response from the server was " + serverResponse
                         + System.lineSeparator();
@@ -85,26 +85,27 @@ public class Client {
             } else if (choice == 2) {
                 System.out.println("Please enter the amount you wish to withdraw.");
                 int amount = Integer.parseInt(br.readLine());
-                String serverResponse = fe.withdraw(ID, amount);
+                String serverResponse = fe.withdraw(ID, String.valueOf(amount));
                 System.out.println(serverResponse);
                 String message = "The user has made a withdrawl. The response from the server was " + serverResponse
                         + System.lineSeparator();
                 Files.write(Paths.get(ID + ".txt"), message.getBytes(), StandardOpenOption.APPEND);
             } else if (choice == 3) {
-                int balance = fe.getBalance(ID);
+            	
+                String balance = fe.getBalance(ID);
                 System.out.println("You have " + balance + " left in your account.");
                 String message = "The user has checked their balance. The response from the server was " + balance +
                         System.lineSeparator();
                 Files.write(Paths.get(ID + ".txt"), message.getBytes(), StandardOpenOption.APPEND);
             } else if (choice == 4) {
-                int balance = fe.getBalance(ID);
+                String balance = fe.getBalance(ID);
                 System.out.println("You have " + balance + " left in your account. Enter the amount you wish to transfer"
                         + " as well as the customer ID to which you wish to transfer.");
                 int amount = Integer.parseInt(br.readLine());
                 String destinationID = br.readLine();
 
                 String serverResponse = "";
-                serverResponse = fe.transferFund(ID, amount, destinationID);
+                serverResponse = fe.transferFund(ID, String.valueOf(amount), destinationID);
 
 
                 String message = "The user has tried transfering an amount. The response from the server was " + serverResponse +
@@ -129,7 +130,7 @@ public class Client {
                 if (choice == 1) {
                     System.out.println("Please enter the amount you wish to deposit.");
                     int amount = Integer.parseInt(br.readLine());
-                    String serverResponse = fe.deposit(ID, amount);
+                    String serverResponse = fe.deposit(ID, String.valueOf(amount));
                     String message = "The user has made a deposit. The response from the server was " + serverResponse +
                             System.lineSeparator();
                     Files.write(Paths.get(ID + ".txt"), message.getBytes(), StandardOpenOption.APPEND);
@@ -137,13 +138,13 @@ public class Client {
                 } else if (choice == 2) {
                     System.out.println("Please enter the amount you wish to withdraw.");
                     int amount = Integer.parseInt(br.readLine());
-                    String serverResponse = fe.withdraw(ID, amount);
+                    String serverResponse = fe.withdraw(ID, String.valueOf(amount));
                     System.out.println(serverResponse);
                     String message = "The user has made a withdrawl. The response from the server was " + serverResponse +
                             System.lineSeparator();
                     Files.write(Paths.get(ID + ".txt"), message.getBytes(), StandardOpenOption.APPEND);
                 } else if (choice == 3) {
-                    int balance = fe.getBalance(ID);
+                    String balance = fe.getBalance(ID);
                     System.out.println("You have " + balance + " left in your account.");
                     String message = "The user has checked their balance. The response from the server was " + balance +
                             System.lineSeparator();
@@ -178,7 +179,7 @@ public class Client {
                     String sourceID = br.readLine();
                     String destID = br.readLine();
                     String serverResponse = "";
-                    serverResponse = fe.transferFundManager(ID, amount, sourceID, destID);
+                    serverResponse = fe.transferFundManager(ID, String.valueOf(amount), sourceID, destID);
                     String message = "The manager " + ID + " has tried transfering an amount. The response from the server was: " + serverResponse +
                             System.lineSeparator();
                     System.out.println(message);

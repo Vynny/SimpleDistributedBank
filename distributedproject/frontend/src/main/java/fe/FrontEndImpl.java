@@ -1,12 +1,12 @@
 package fe;
-
 import fe.corba.FrontEndPOA;
 import org.omg.CORBA.ORB;
 import java.util.Timer;
 import java.util.TimerTask;
 import com.reliable.ReliableUDP;
 import messages.branch.*;
-import com.message.Message;;
+import com.message.Message;
+
 public class FrontEndImpl extends FrontEndPOA {
 	private ORB orb;
 	private ReliableUDP udp;
@@ -42,7 +42,7 @@ public class FrontEndImpl extends FrontEndPOA {
 		    t.start();
 	}
 	
-	public void UDPListener() { 
+	private void UDPListener() { 
 		int mInd = 0;
 		while (true) {
 			Message reply = udp.receive();
@@ -168,11 +168,38 @@ public class FrontEndImpl extends FrontEndPOA {
 	}
 	public String createAccountRecord(String managerID, String firstName, String lastName, String address
 			   , String phone, String branch) {
-		String retMessage = "sorry bro, but this aint gon work till the rest of the project is up";
+		try {
+			BranchRequestBody body = new BranchRequestBody().createAccountRecord(managerID, firstName,
+					lastName, address, phone, branch);
+			udp.send(body, "createAccountRecord", managerID, FEID);
+		}
+		catch(Exception e) {
+			System.out.println("Problem connecting through udp to sequencer from FE");
+		}
+		String retMessage = "";
+		
+		while (finalResult == null) {
+			// wait for the system to compute the result
+		}
+		retMessage = finalResult;
+		finalResult = null;
 		return retMessage;
 	}
 	public String editRecord(String managerID, String customerID, String fieldName, String newValue) {
-		String retMessage = "sorry bro, but this aint gon work till the rest of the project is up";
+		try {
+			BranchRequestBody body = new BranchRequestBody().editRecord(managerID, customerID, fieldName, newValue);
+			udp.send(body, "editRecord", customerID, FEID);
+		}
+		catch(Exception e) {
+			System.out.println("Problem connecting through udp to sequencer from FE");
+		}
+		String retMessage = "";
+		
+		while (finalResult == null) {
+			// wait for the system to compute the result
+		}
+		retMessage = finalResult;
+		finalResult = null;
 		return retMessage;
 	}
 	public String getAccountCount(String managerID) {
@@ -180,7 +207,7 @@ public class FrontEndImpl extends FrontEndPOA {
 		return retMessage;
 	}
 	   
-	public String transferFundManager (String managerID,int amount, String sourceCustomerID,String destinationCustomerID) {
+	public String transferFundManager (String managerID,String amount, String sourceCustomerID,String destinationCustomerID) {
 		String retMessage = "sorry bro, but this aint gon work till the rest of the project is up";
 		return retMessage;
 	}
@@ -188,13 +215,13 @@ public class FrontEndImpl extends FrontEndPOA {
 		    orb.shutdown(false);
     }
 	
-	public String transferFund(String sourceCustomerID,int amount,String destinationCustomerID) {
+	public String transferFund(String sourceCustomerID,String amount,String destinationCustomerID) {
 		String retMessage = "sorry bro, but this aint gon work till the rest of the project is up";
 		return retMessage;
 	}
-	public String deposit(String customerID,int amount) {
+	public String deposit(String customerID,String amount) {
 		try {
-			BranchRequestBody body = new BranchRequestBody().deposit(customerID, String.valueOf(amount));
+			BranchRequestBody body = new BranchRequestBody().deposit(customerID, amount);
 			udp.send(body, "deposit", customerID, FEID);
 		}
 		catch(Exception e) {
@@ -209,11 +236,38 @@ public class FrontEndImpl extends FrontEndPOA {
 		finalResult = null;
 		return retMessage;
 	}
-	public String withdraw(String customerID, int amount) {
-		String retMessage = "sorry bro, but this aint gon work till the rest of the project is up";
+	public String withdraw(String customerID, String amount) {
+		try {
+			BranchRequestBody body = new BranchRequestBody().withdraw(customerID, amount);
+			udp.send(body, "withdraw", customerID, FEID);
+		}
+		catch(Exception e) {
+			System.out.println("Problem connecting through udp to sequencer from FE");
+		}
+		String retMessage = "";
+		
+		while (finalResult == null) {
+			// wait for the system to compute the result
+		}
+		retMessage = finalResult;
+		finalResult = null;
 		return retMessage;
 	}
-	public int getBalance(String customerID) {
-		   return 0;
+	public String getBalance(String customerID) {
+		try {
+			BranchRequestBody body = new BranchRequestBody().getBalance(customerID);
+			udp.send(body, "getBalance", customerID, FEID);
+		}
+		catch(Exception e) {
+			System.out.println("Problem connecting through udp to sequencer from FE");
+		}
+		String retMessage = "";
+		
+		while (finalResult == null) {
+			// wait for the system to compute the result
+		}
+		retMessage = finalResult;
+		finalResult = null;
+		return retMessage;
 	}
 }
