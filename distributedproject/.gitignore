@@ -1,3 +1,6 @@
+#### CORBA ###
+orb.db/
+
 ### IntelliJ IDEA ###
 .idea/
 *.iml
