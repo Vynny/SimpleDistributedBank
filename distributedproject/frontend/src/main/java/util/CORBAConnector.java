@@ -8,13 +8,12 @@ import org.omg.CosNaming.NamingContextExtHelper;
 
 public class CORBAConnector {
 
-    private static ORB orb;
-
-    public static void initORB(String[] args) {
-        orb = ORB.init(args, null);
-    }
+    private static ORB orb = null;
 
     public static FrontEnd connectFrontEnd() throws Exception {
+        if (orb == null)
+            initORB();
+
         String frontEndName = "FrontEnd";
         FrontEnd frontEnd = null;
 
@@ -26,5 +25,9 @@ public class CORBAConnector {
         frontEnd = FrontEndHelper.narrow(ncRef.resolve_str(frontEndName));
 
         return frontEnd;
+    }
+
+    private static void initORB() {
+        orb = ORB.init(new String[0], CORBAConfig.getCorbaProperties());
     }
 }

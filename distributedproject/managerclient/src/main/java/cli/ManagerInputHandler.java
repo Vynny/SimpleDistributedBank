@@ -54,15 +54,16 @@ public class ManagerInputHandler extends InputHandler {
                             //UDPBroadcaster.getAccountCount(fullCommand[1]);
                             break;
                         case DEPOSIT:
-                            BankLogger.logUserAction(fullCommand[1], serverRemote.deposit(fullCommand[2], Integer.parseInt(fullCommand[3])));
+                            BankLogger.logUserAction(fullCommand[1], serverRemote.deposit(fullCommand[2], fullCommand[3]));
                             break;
                         case WITHDRAW:
-                            BankLogger.logUserAction(fullCommand[1], serverRemote.withdraw(fullCommand[2], Integer.parseInt(fullCommand[3])));
+                            BankLogger.logUserAction(fullCommand[1], serverRemote.withdraw(fullCommand[2], fullCommand[3]));
                             break;
                         case GETBALANCE:
-                            //BankLogger.logUserAction(fullCommand[1], serverRemote.getBalance(fullCommand[2]));
+                            BankLogger.logUserAction(fullCommand[1], serverRemote.getBalance(fullCommand[2]));
                             break;
                     }
+
                 }
             } catch (Exception e) {
                 System.out.println("Could not connect to remote branch server.");
