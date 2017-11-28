@@ -5,7 +5,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.net.SocketAddress;
 import java.net.SocketException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -106,12 +105,12 @@ public class UDPMulticast extends Thread {
 			if (!groupId.equals(requestMessage.getHeader().group)) {
 				continue;
 			} else {
-				handleRequest(requestPacket.getSocketAddress(), requestMessage);
+				handleRequest(requestMessage);
 			}
 		}
 	}
 
-	private void handleRequest(SocketAddress destinationAddress, Message requestMessage) {
+	private void handleRequest(Message requestMessage) {
 		MessageHeader requestHeader = requestMessage.getHeader();
 
 		long lastSequenceFromSender = getLastReceivedFrom(requestHeader.originId);
@@ -122,6 +121,7 @@ public class UDPMulticast extends Thread {
 			// Hold it
 			addMessageToHoldBackQueue(requestMessage);
 		}
+
 		deliverFromHoldBackQueue(requestHeader.originId, lastSequenceFromSender);
 
 		// Check if we're missing message from the group
@@ -132,10 +132,17 @@ public class UDPMulticast extends Thread {
 		PriorityQueue<Message> queue = holdBackQueues.get(originId);
 
 		boolean hasDelivered = false;
-		while (!queue.isEmpty() && queue.peek().getHeader().sequenceNumber == lastSequenceNumber + 1) {
-			messageBuffer.add(queue.poll());
-			hasDelivered = true;
-			lastSequenceNumber++;
+		while (!queue.isEmpty()) {
+			long nextSequenceNumberInQueue = queue.peek().getHeader().sequenceNumber;
+			if (nextSequenceNumberInQueue > lastSequenceNumber + 1) {
+				// Missing messages
+				requestMissingMessages(originId, lastSequenceNumber + 1, nextSequenceNumberInQueue - 1);
+				break;
+			} else {
+				messageBuffer.add(queue.poll());
+				hasDelivered = true;
+				lastSequenceNumber++;
+			}
 		}
 
 		if (hasDelivered) {
@@ -144,13 +151,20 @@ public class UDPMulticast extends Thread {
 		}
 	}
 
+	private void requestMissingMessages(String originId, long first, long last) {
+		// TODO Auto-generated method stub
+
+	}
+
 	private void addMessageToHoldBackQueue(Message message) {
 		PriorityQueue<Message> queue = holdBackQueues.get(message.getHeader().originId);
 		if (queue == null) {
 			queue = new PriorityQueue<>();
 			// TODO comparator
 		}
-		queue.add(message);
+		if (!queue.contains(message)) {
+			queue.add(message);
+		}
 	}
 
 	private void handleMissingMessageFromGroup(MessageHeader requestHeader) {
