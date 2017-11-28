@@ -35,6 +35,9 @@ public class MessageHeader implements Serializable {
 	public String destinationId;
 	public String destinationAddress;
 	public int destinationPort;
+	
+	// Who last sent the message (for multicast rejection)
+	public String senderId;
 
 	// PiggyBack acks for Reliable Multicast
 	public Map<String, Long> acks;

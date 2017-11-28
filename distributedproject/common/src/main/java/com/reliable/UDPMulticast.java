@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
-import java.net.SocketAddress;
 import java.net.SocketException;
 import java.util.Collections;
 import java.util.Comparator;
@@ -40,6 +38,7 @@ public class UDPMulticast extends Thread {
 
 	private MulticastSocket socket;
 	private String groupId;
+	private String clientId;
 	private InetAddress group;
 	private int groupPort;
 	private ConcurrentLinkedQueue<Message> messageBuffer;
@@ -57,8 +56,8 @@ public class UDPMulticast extends Thread {
 	 */
 	private Map<String, Long> lastReceivedSequenceNumbers;
 
-	public UDPMulticast(ConcurrentLinkedQueue<Message> messageBuffer, String groupId, InetAddress group, int port)
-			throws IOException {
+	public UDPMulticast(ConcurrentLinkedQueue<Message> messageBuffer, String clientId, String groupId,
+			InetAddress group, int port) throws IOException {
 		if (messageBuffer == null) {
 			throw new IllegalArgumentException("No buffer");
 		}
@@ -71,6 +70,7 @@ public class UDPMulticast extends Thread {
 			throw e;
 		}
 
+		this.clientId = clientId;
 		this.groupId = groupId;
 		this.groupPort = port;
 		this.group = group;
@@ -124,8 +124,9 @@ public class UDPMulticast extends Thread {
 				continue;
 			}
 
-			// Drop message if this isn't its destination
-			if (!groupId.equals(requestMessage.getHeader().group)) {
+			// Drop message if this isn't its destination or its our own message
+			if (!groupId.equals(requestMessage.getHeader().group)
+					|| clientId.equals(requestMessage.getHeader().senderId)) {
 				continue;
 			} else {
 				handleRequest(requestMessage);
@@ -136,7 +137,7 @@ public class UDPMulticast extends Thread {
 	private void handleRequest(Message requestMessage) {
 		MessageHeader requestHeader = requestMessage.getHeader();
 
-		long lastSequenceFromSender = getLastReceivedFrom(requestHeader.originId);
+		long lastSequenceFromSender = getLastReceivedFrom(requestHeader.senderId);
 		if (requestHeader.sequenceNumber <= lastSequenceFromSender) {
 			// Already delivered this message, Drop it
 			return;
@@ -145,21 +146,21 @@ public class UDPMulticast extends Thread {
 			addMessageToHoldBackQueue(requestMessage);
 		}
 
-		deliverFromHoldBackQueue(requestHeader.originId, lastSequenceFromSender);
+		deliverFromHoldBackQueue(requestHeader.senderId, lastSequenceFromSender);
 
 		// Check if we're missing message from the group
 		handleMissingMessageFromGroup(requestHeader);
 	}
 
-	private void deliverFromHoldBackQueue(String originId, long lastSequenceNumber) {
-		PriorityQueue<Message> queue = holdBackQueues.get(originId);
+	private void deliverFromHoldBackQueue(String senderId, long lastSequenceNumber) {
+		PriorityQueue<Message> queue = holdBackQueues.get(senderId);
 
 		boolean hasDelivered = false;
 		while (!queue.isEmpty()) {
 			long nextSequenceNumberInQueue = queue.peek().getHeader().sequenceNumber;
 			if (nextSequenceNumberInQueue > lastSequenceNumber + 1) {
 				// Missing messages
-				requestMissingMessages(originId, lastSequenceNumber + 1, nextSequenceNumberInQueue - 1);
+				requestMissingMessages(senderId, lastSequenceNumber + 1, nextSequenceNumberInQueue - 1);
 				break;
 			} else {
 				messageBuffer.add(queue.poll());
@@ -169,15 +170,15 @@ public class UDPMulticast extends Thread {
 		}
 
 		if (hasDelivered) {
-			lastReceivedSequenceNumbers.put(originId, lastSequenceNumber);
+			lastReceivedSequenceNumbers.put(senderId, lastSequenceNumber);
 
 		}
 	}
 
-	private void requestMissingMessages(String originId, long first, long last) {
+	private void requestMissingMessages(String senderId, long first, long last) {
 		new Thread() {
 			public void run() {
-				Message message = buildNackMessage(originId, first, last);
+				Message message = buildNackMessage(senderId, first, last);
 				DatagramPacket requestPacket = UDPHelper.buildDatagramPacket(message);
 
 				DatagramSocket socket = null;
@@ -194,24 +195,24 @@ public class UDPMulticast extends Thread {
 		}.start();
 	}
 
-	private Message buildNackMessage(String originId, long first, long last) {
+	private Message buildNackMessage(String senderId, long first, long last) {
 		MessageHeader header = new MessageHeader();
 		header.messageId = "NACK";
 		header.destinationId = groupId;
 		header.destinationAddress = group.getHostAddress();
 		header.destinationPort = groupPort;
 
-		NACKBody body = new NACKBody(originId, first, last);
+		NACKBody body = new NACKBody(senderId, first, last);
 		Message message = new Message(UDPHelper.NACK_ACTION, header, body);
 
 		return message;
 	}
 
 	private void addMessageToHoldBackQueue(Message message) {
-		PriorityQueue<Message> queue = holdBackQueues.get(message.getHeader().originId);
+		PriorityQueue<Message> queue = holdBackQueues.get(message.getHeader().senderId);
 		if (queue == null) {
 			queue = new PriorityQueue<Message>(MESSAGE_SEQUENCE_COMPARATOR);
-			holdBackQueues.put(message.getHeader().originId, queue);
+			holdBackQueues.put(message.getHeader().senderId, queue);
 		}
 		if (!queue.contains(message)) {
 			queue.add(message);
@@ -223,8 +224,8 @@ public class UDPMulticast extends Thread {
 
 	}
 
-	private long getLastReceivedFrom(String originId) {
-		Long lastSeqInMap = lastReceivedSequenceNumbers.get(originId);
+	private long getLastReceivedFrom(String senderId) {
+		Long lastSeqInMap = lastReceivedSequenceNumbers.get(senderId);
 
 		if (lastSeqInMap == null) {
 			return 0;

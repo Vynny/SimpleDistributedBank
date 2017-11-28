@@ -56,7 +56,7 @@ public class ReliableUDP {
 			throw new IOException("This module does not belong to a group");
 		}
 		InetSocketAddress location = locationDb.get(groupId);
-		udpMulticast = new UDPMulticast(messageBuffer, groupId, location.getAddress(), location.getPort());
+		udpMulticast = new UDPMulticast(messageBuffer, id, groupId, location.getAddress(), location.getPort());
 		udpMulticast.start();
 	}
 
@@ -162,6 +162,7 @@ public class ReliableUDP {
 		header.messageId = getNextMessageId();
 		header.customId = customId;
 
+		header.senderId = id;
 		header.originId = id;
 		header.originAddress = listener.getSocketAddress();
 		header.originPort = listener.getSocketPort();
@@ -181,6 +182,7 @@ public class ReliableUDP {
 		header.messageId = getNextMessageId();
 		header.customId = origin.customId;
 
+		header.senderId = id;
 		header.originId = id;
 		header.originAddress = listener.getSocketAddress();
 		header.originPort = listener.getSocketPort();
@@ -198,6 +200,7 @@ public class ReliableUDP {
 	private void setForwardMulticastHeader(MessageHeader header, String destinationId) {
 		InetSocketAddress destinationLocation = getLocation(destinationId);
 		header.group = groupId;
+		header.senderId = id;
 		header.destinationId = destinationId;
 		header.destinationAddress = destinationLocation.getAddress().getHostAddress();
 		header.destinationPort = destinationLocation.getPort();
