@@ -38,16 +38,16 @@ public class ClientInputHandler extends InputHandler {
 
                     switch (requestedAction) {
                         case DEPOSIT:
-                            BankLogger.logUserAction(customerId, serverRemote.deposit(customerId, Integer.parseInt(fullCommand[2])));
+                            BankLogger.logUserAction(customerId, serverRemote.deposit(customerId, fullCommand[2]));
                             break;
                         case WITHDRAW:
-                            BankLogger.logUserAction(customerId, serverRemote.withdraw(customerId, Integer.parseInt(fullCommand[2])));
+                            BankLogger.logUserAction(customerId, serverRemote.withdraw(customerId, fullCommand[2]));
                             break;
                         case TRANSFER:
                             //UDPBroadcaster.transferFund(null, fullCommand[2], fullCommand[1], fullCommand[3]);
                             break;
                         case GETBALANCE:
-                            //BankLogger.logUserAction(customerId, serverRemote.getBalance(customerId));
+                            BankLogger.logUserAction(customerId, serverRemote.getBalance(customerId));
                             break;
                     }
                 }
