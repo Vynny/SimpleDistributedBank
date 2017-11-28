@@ -6,60 +6,48 @@ import com.message.MessageHeader;
 import java.io.IOException;
 import java.net.*;
 import java.util.HashSet;
-import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class UDPListener extends Thread {
+public class UDPUnicastListener extends Thread {
 	private DatagramSocket socket;
 
 	/**
 	 * MessageIds already processed and delivered.
 	 */
-	private Set<String> replyHistory;
+	private Set<String> replyHistory = new HashSet<>();
 
-	private Queue<Message> messageBuffer;
+	private ConcurrentLinkedQueue<Message> messageBuffer;
 
 	private String id;
 
-	public UDPListener(String id, int port) throws SocketException {
+	public UDPUnicastListener(ConcurrentLinkedQueue<Message> messageBuffer, String id, int port)
+			throws SocketException {
+		if (messageBuffer == null) {
+			throw new IllegalArgumentException("No buffer");
+		}
+
 		try {
-			socket = new DatagramSocket(null);
-			socket.setReuseAddress(true);
-			socket.setBroadcast(true);
-			socket.bind(new InetSocketAddress(port));
+			if (port < 0) {
+				socket = new DatagramSocket(port);
+			}
 		} catch (SocketException e) {
 			System.err.println("Unable to start the UDP Server");
 			throw e;
 		}
 		this.id = id;
-		buildStructs();
+		this.messageBuffer = messageBuffer;
 	}
 
-	public UDPListener(String id) throws SocketException {
+	public UDPUnicastListener(ConcurrentLinkedQueue<Message> messageBuffer, String id) throws SocketException {
 		this.id = id;
 		try {
 			socket = new DatagramSocket();
-			socket.setBroadcast(true);
 		} catch (SocketException e) {
 			System.err.println("Unable to start the UDP Server");
 			throw e;
 		}
-		buildStructs();
-	}
-
-	private void buildStructs() {
-		replyHistory = new HashSet<>();
-		messageBuffer = new ConcurrentLinkedQueue<>();
-	}
-
-	/**
-	 * Return the next message, null if no messages are available.
-	 *
-	 * @return null if no messages
-	 */
-	public Message receive() {
-		return messageBuffer.poll();
+		this.messageBuffer = messageBuffer;
 	}
 
 	public void run() {
@@ -90,19 +78,13 @@ public class UDPListener extends Thread {
 	private void handleRequest(SocketAddress destinationAddress, Message requestMessage) {
 		MessageHeader requestHeader = requestMessage.getHeader();
 
-		if (requestHeader.isTotallyOrdered) {
-			// TODO total ordering
-		} else if (requestHeader.group != null) {
-			// TODO multicast receive
-		} else {
-			// Only add to the message Queue if it is a new request
-			if (!replyHistory.contains(requestHeader.messageId)) {
-				messageBuffer.add(requestMessage);
-			}
-
-			DatagramPacket replyPacket = UDPHelper.buildAckDatagramPacket(requestMessage, destinationAddress);
-			sendReply(requestHeader.messageId, replyPacket);
+		// Only add to the message Queue if it is a new request
+		if (!replyHistory.contains(requestHeader.messageId)) {
+			messageBuffer.add(requestMessage);
 		}
+
+		DatagramPacket replyPacket = UDPHelper.buildAckDatagramPacket(requestMessage, destinationAddress);
+		sendReply(requestHeader.messageId, replyPacket);
 	}
 
 	private void sendReply(String messageId, DatagramPacket replyPacket) {
@@ -121,7 +103,6 @@ public class UDPListener extends Thread {
 					DatagramSocket socket = null;
 					try {
 						socket = new DatagramSocket();
-						socket.setBroadcast(true);
 						socket.send(replyPacket);
 					} catch (SocketException e) {
 						e.printStackTrace();
@@ -160,11 +141,11 @@ public class UDPListener extends Thread {
 			}
 		}.start();
 	}
-	
+
 	public int getSocketPort() {
 		return socket.getLocalPort();
 	}
-	
+
 	public String getSocketAddress() {
 		return socket.getLocalAddress().getHostAddress();
 	}

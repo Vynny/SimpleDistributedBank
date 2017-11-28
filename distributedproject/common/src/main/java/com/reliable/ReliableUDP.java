@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class ReliableUDP {
 	private static final String LOCATION_DB_FILENAME = "location.db";
@@ -19,20 +20,23 @@ public class ReliableUDP {
 
 	private final String id;
 
-	private UDPListener listener;
+	private UDPUnicastListener listener;
 	private Map<String, InetSocketAddress> locationDb;
 	private Map<String, List<String>> groupDb;
 
+	private ConcurrentLinkedQueue<Message> messageBuffer;
+
 	public ReliableUDP(String id) throws IOException {
 		this.id = id;
+		messageBuffer = new ConcurrentLinkedQueue<Message>();
 
 		groupDb = buildGroupDb(ClassLoader.getSystemResourceAsStream(GROUPS_DB_FILENAME));
 		locationDb = buildLocationDb(ClassLoader.getSystemResourceAsStream(LOCATION_DB_FILENAME));
 
 		if (UDPHelper.ANONYMOUS_ID.equals(id)) {
-			listener = new UDPListener(id);
+			listener = new UDPUnicastListener(messageBuffer, id);
 		} else {
-			listener = new UDPListener(id, getLocation(id).getPort());
+			listener = new UDPUnicastListener(messageBuffer, id, getLocation(id).getPort());
 		}
 		listener.start();
 	}
@@ -87,12 +91,7 @@ public class ReliableUDP {
 	 * @return The next message or null if none.
 	 */
 	public Message receive() {
-		if (listener == null) {
-			throw new IllegalStateException("No server is currently active");
-		}
-
-		Message nextMessage = listener.receive();
-		return nextMessage;
+		return messageBuffer.poll();
 	}
 
 	/**
