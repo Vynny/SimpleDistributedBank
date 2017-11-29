@@ -19,7 +19,7 @@ public class FrontEndImpl extends FrontEndPOA {
 	private String finalResult;
 	public void setORB(ORB orb_val) {
 		orb = orb_val;
-	}  
+	}
 	public void setAttribs(ORB orb_val, String FEID) {
 		this.FEID = FEID;
 		try {
@@ -27,10 +27,10 @@ public class FrontEndImpl extends FrontEndPOA {
 			messages = new Message[3];
 			startFEUDP();
 		}
-		
+
 		catch(Exception e) {
-			
-			
+
+
 		}
 	}
 	public void startFEUDP() {
@@ -43,12 +43,13 @@ public class FrontEndImpl extends FrontEndPOA {
 		});
 		    t.start();
 	}
-	
-	private void UDPListener() { 
+
+	private void UDPListener() {
 		int mInd = 0;
 		while (true) {
 			Message reply = udp.receive();
 			if (reply != null) {
+				printReply(reply);
 
 				String customID = reply.getHeader().customId;
 				// then the FE received the correct reply
@@ -66,13 +67,13 @@ public class FrontEndImpl extends FrontEndPOA {
 					++mInd;
 				}
 			}
-			
+
 			if (mInd == 3) {
 				// we received all the replies, we can now handle the 3 messages to produce one correct reply for the client
 				try {
 					receivedAllResults = true;
 					finalResult = handleReplies();
-					
+
 				}
 				catch (Exception e) {
 					System.out.println("Problem in handling replies in the Front End");
@@ -87,7 +88,7 @@ public class FrontEndImpl extends FrontEndPOA {
 			  @Override
 			  public void run() {
 			    // so after 3 seconds, we execute this code
-				  
+
 				  if(!receivedAllResults) {
 					  System.err.println("It's been 3 seconds and the Front End hasn't received all the needed replies");
 					  BranchRequestBody body = new BranchRequestBody().notifyCrashError(
@@ -100,7 +101,7 @@ public class FrontEndImpl extends FrontEndPOA {
 					  catch(Exception e) {
 						  System.out.println("Failed to notify the sequencer about a crash error");
 					  }
-					  
+
 				  }
 			  }
 			}, 3*1*1000); // after 3 seconds
@@ -115,7 +116,7 @@ public class FrontEndImpl extends FrontEndPOA {
 				if (i != j) {
 					Message replyI = messages[i];
 					Message replyJ = messages[j];
-					
+
 					BranchReplyBody bodyI = (BranchReplyBody)replyI.getBody();
 					BranchReplyBody bodyJ = (BranchReplyBody)replyJ.getBody();
 					String rI = bodyI.getReply();
@@ -130,23 +131,23 @@ public class FrontEndImpl extends FrontEndPOA {
 							failedIndexes[0] = i;
 							failedIndexes[1] = j;
 						}
-					
+
 				}
 			}
-			
+
 		}
 		if (problemDetected)
 			for (int i = 0; i < messages.length; ++i) {
 				for (int j = 0; j < messages.length; ++j) {
 					Message replyI = messages[i];
 					Message replyJ = messages[j];
-					
+
 					BranchReplyBody bodyI = (BranchReplyBody)replyI.getBody();
 					BranchReplyBody bodyJ = (BranchReplyBody)replyJ.getBody();
 					String rI = bodyI.getReply();
 					String rJ = bodyJ.getReply();
 					String failedRM = "";
-					
+
 					if (rI.equalsIgnoreCase(correctResult)) {
 						correctResult = rJ;
 						failedRM = replyI.getHeader().originId;
@@ -161,7 +162,7 @@ public class FrontEndImpl extends FrontEndPOA {
 					System.err.println("The error occured in RM: " + failedRM);
 				}
 		}
-		
+
 		for (int i = 0; i < messages.length; ++i)
 			messages[i] = null;
 		int newFEID = Integer.parseInt(FEID);
@@ -179,7 +180,7 @@ public class FrontEndImpl extends FrontEndPOA {
 			System.out.println("Problem connecting through udp to sequencer from FE");
 		}
 		String retMessage = "";
-		
+
 		while (finalResult == null) {
 			// wait for the system to compute the result
 		}
@@ -196,7 +197,7 @@ public class FrontEndImpl extends FrontEndPOA {
 			System.out.println("Problem connecting through udp to sequencer from FE");
 		}
 		String retMessage = "";
-		
+
 		while (finalResult == null) {
 			// wait for the system to compute the result
 		}
@@ -208,7 +209,7 @@ public class FrontEndImpl extends FrontEndPOA {
 		String retMessage = "sorry bro, but this aint gon work till the rest of the project is up";
 		return retMessage;
 	}
-	   
+
 	public String transferFundManager (String managerID,String amount, String sourceCustomerID,String destinationCustomerID) {
 		String retMessage = "sorry bro, but this aint gon work till the rest of the project is up";
 		return retMessage;
@@ -216,7 +217,7 @@ public class FrontEndImpl extends FrontEndPOA {
 	public void shutdown() {
 		    orb.shutdown(false);
     }
-	
+
 	public String transferFund(String sourceCustomerID,String amount,String destinationCustomerID) {
 		String retMessage = "sorry bro, but this aint gon work till the rest of the project is up";
 		return retMessage;
@@ -230,7 +231,7 @@ public class FrontEndImpl extends FrontEndPOA {
 			System.out.println("Problem connecting through udp to sequencer from FE");
 		}
 		String retMessage = "";
-		
+
 		while (finalResult == null) {
 			// wait for the system to compute the result
 		}
@@ -247,7 +248,7 @@ public class FrontEndImpl extends FrontEndPOA {
 			System.out.println("Problem connecting through udp to sequencer from FE");
 		}
 		String retMessage = "";
-		
+
 		while (finalResult == null) {
 			// wait for the system to compute the result
 		}
@@ -264,7 +265,7 @@ public class FrontEndImpl extends FrontEndPOA {
 			System.out.println("Problem connecting through udp to sequencer from FE");
 		}
 		String retMessage = "";
-		
+
 		while (finalResult == null) {
 			// wait for the system to compute the result
 		}
@@ -275,5 +276,14 @@ public class FrontEndImpl extends FrontEndPOA {
 
 	private String resolveSequencerId(String bankUserId) {
 		return "SEQ" + bankUserId.substring(0, 2);
+	}
+
+	private void printReply(Message message) {
+		System.out.println("Received message");
+		System.out.println("\t-ID: " + message.getHeader().messageId);
+		System.out.println("\t-Origin ID: " + message.getHeader().originId);
+		System.out.println("\t-Origin Address: " + message.getHeader().originAddress);
+		System.out.println("\t-Dest ID: " + message.getHeader().destinationId);
+		System.out.println("\t-Dest Address: " + message.getHeader().destinationAddress + "\n");
 	}
 }
