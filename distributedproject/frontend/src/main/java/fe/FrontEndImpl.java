@@ -229,7 +229,7 @@ public class FrontEndImpl extends FrontEndPOA {
 		}
 		catch(Exception e) {
 			System.out.println("Problem connecting through udp to sequencer from FE");
-		}
+	}
 		String retMessage = "";
 
 		while (finalResult == null) {

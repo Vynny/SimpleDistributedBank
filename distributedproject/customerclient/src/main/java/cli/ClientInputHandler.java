@@ -39,7 +39,8 @@ public class ClientInputHandler extends InputHandler {
 
                         switch (requestedAction) {
                             case DEPOSIT:
-                                BankLogger.logUserAction(customerId, serverRemote.deposit(customerId, fullCommand[2]));
+                                System.out.println(serverRemote.deposit(customerId, fullCommand[2]));
+                                //BankLogger.logUserAction(customerId, serverRemote.deposit(customerId, fullCommand[2]));
                                 break;
                             case WITHDRAW:
                                 BankLogger.logUserAction(customerId, serverRemote.withdraw(customerId, fullCommand[2]));
@@ -48,6 +49,7 @@ public class ClientInputHandler extends InputHandler {
                                 //UDPBroadcaster.transferFund(null, fullCommand[2], fullCommand[1], fullCommand[3]);
                                 break;
                             case GETBALANCE:
+                                System.out.println(serverRemote.getBalance(customerId));
                                 BankLogger.logUserAction(customerId, serverRemote.getBalance(customerId));
                                 break;
                         }
