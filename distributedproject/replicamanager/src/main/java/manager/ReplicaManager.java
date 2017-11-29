@@ -64,6 +64,7 @@ public class ReplicaManager {
     private void startNetworking() {
         try {
             this.reliableUDP = new ReliableUDP(rmName);
+            this.reliableUDP.startUDPMulticast();
         } catch (IOException e) {
             e.printStackTrace();
         }
