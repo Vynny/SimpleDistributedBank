@@ -27,34 +27,38 @@ public class ClientInputHandler extends InputHandler {
         Action requestedAction = validateAction(fullCommand);
         if (requestedAction != Action.INVALID) {
 
-            try {
-                FrontEnd serverRemote = null;
+            String customerId = fullCommand[1];
+            if (isUserIdValid(customerId)) {
+                try {
+                    FrontEnd serverRemote = null;
 
-                if (requestedAction != Action.TRANSFER)
-                    serverRemote = CORBAConnector.connectFrontEnd();
+                    if (requestedAction != Action.TRANSFER)
+                        serverRemote = CORBAConnector.connectFrontEnd();
 
-                if (requestedAction == Action.TRANSFER ||serverRemote != null) {
-                    String customerId = fullCommand[1];
+                    if (requestedAction == Action.TRANSFER || serverRemote != null) {
 
-                    switch (requestedAction) {
-                        case DEPOSIT:
-                            BankLogger.logUserAction(customerId, serverRemote.deposit(customerId, fullCommand[2]));
-                            break;
-                        case WITHDRAW:
-                            BankLogger.logUserAction(customerId, serverRemote.withdraw(customerId, fullCommand[2]));
-                            break;
-                        case TRANSFER:
-                            //UDPBroadcaster.transferFund(null, fullCommand[2], fullCommand[1], fullCommand[3]);
-                            break;
-                        case GETBALANCE:
-                            BankLogger.logUserAction(customerId, serverRemote.getBalance(customerId));
-                            break;
+                        switch (requestedAction) {
+                            case DEPOSIT:
+                                BankLogger.logUserAction(customerId, serverRemote.deposit(customerId, fullCommand[2]));
+                                break;
+                            case WITHDRAW:
+                                BankLogger.logUserAction(customerId, serverRemote.withdraw(customerId, fullCommand[2]));
+                                break;
+                            case TRANSFER:
+                                //UDPBroadcaster.transferFund(null, fullCommand[2], fullCommand[1], fullCommand[3]);
+                                break;
+                            case GETBALANCE:
+                                BankLogger.logUserAction(customerId, serverRemote.getBalance(customerId));
+                                break;
+                        }
                     }
-                }
 
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.out.println("Could not connect to remote branch server.");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.out.println("Could not connect to remote branch server.");
+                }
+            } else {
+                System.out.println("\nYou have entered an invalid customer id.\n");
             }
         } else {
             System.out.println("\nThat is not a valid action. Please consult the help command.\n");

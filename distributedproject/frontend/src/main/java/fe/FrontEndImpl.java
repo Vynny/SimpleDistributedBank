@@ -1,11 +1,13 @@
 package fe;
+import com.message.Message;
+import com.reliable.ReliableUDP;
 import fe.corba.FrontEndPOA;
+import messages.branch.BranchReplyBody;
+import messages.branch.BranchRequestBody;
 import org.omg.CORBA.ORB;
+
 import java.util.Timer;
 import java.util.TimerTask;
-import com.reliable.ReliableUDP;
-import messages.branch.*;
-import com.message.Message;
 
 public class FrontEndImpl extends FrontEndPOA {
 	private ORB orb;
@@ -21,7 +23,7 @@ public class FrontEndImpl extends FrontEndPOA {
 	public void setAttribs(ORB orb_val, String FEID) {
 		this.FEID = FEID;
 		try {
-			udp = new ReliableUDP("remove this");
+			udp = new ReliableUDP();
 			messages = new Message[3];
 			startFEUDP();
 		}
@@ -171,7 +173,7 @@ public class FrontEndImpl extends FrontEndPOA {
 		try {
 			BranchRequestBody body = new BranchRequestBody().createAccountRecord(managerID, firstName,
 					lastName, address, phone, branch);
-			udp.send(body, "createAccountRecord", managerID, FEID);
+			udp.send(body, "createAccountRecord", resolveSequencerId(managerID), FEID);
 		}
 		catch(Exception e) {
 			System.out.println("Problem connecting through udp to sequencer from FE");
@@ -188,7 +190,7 @@ public class FrontEndImpl extends FrontEndPOA {
 	public String editRecord(String managerID, String customerID, String fieldName, String newValue) {
 		try {
 			BranchRequestBody body = new BranchRequestBody().editRecord(managerID, customerID, fieldName, newValue);
-			udp.send(body, "editRecord", customerID, FEID);
+			udp.send(body, "editRecord", resolveSequencerId(customerID), FEID);
 		}
 		catch(Exception e) {
 			System.out.println("Problem connecting through udp to sequencer from FE");
@@ -222,7 +224,7 @@ public class FrontEndImpl extends FrontEndPOA {
 	public String deposit(String customerID,String amount) {
 		try {
 			BranchRequestBody body = new BranchRequestBody().deposit(customerID, amount);
-			udp.send(body, "deposit", customerID, FEID);
+			udp.send(body, "deposit", resolveSequencerId(customerID), FEID);
 		}
 		catch(Exception e) {
 			System.out.println("Problem connecting through udp to sequencer from FE");
@@ -239,7 +241,7 @@ public class FrontEndImpl extends FrontEndPOA {
 	public String withdraw(String customerID, String amount) {
 		try {
 			BranchRequestBody body = new BranchRequestBody().withdraw(customerID, amount);
-			udp.send(body, "withdraw", customerID, FEID);
+			udp.send(body, "withdraw", resolveSequencerId(customerID), FEID);
 		}
 		catch(Exception e) {
 			System.out.println("Problem connecting through udp to sequencer from FE");
@@ -256,7 +258,7 @@ public class FrontEndImpl extends FrontEndPOA {
 	public String getBalance(String customerID) {
 		try {
 			BranchRequestBody body = new BranchRequestBody().getBalance(customerID);
-			udp.send(body, "getBalance", customerID, FEID);
+			udp.send(body, "getBalance", resolveSequencerId(customerID), FEID);
 		}
 		catch(Exception e) {
 			System.out.println("Problem connecting through udp to sequencer from FE");
@@ -269,5 +271,9 @@ public class FrontEndImpl extends FrontEndPOA {
 		retMessage = finalResult;
 		finalResult = null;
 		return retMessage;
+	}
+
+	private String resolveSequencerId(String bankUserId) {
+		return "SEQ" + bankUserId.substring(0, 2);
 	}
 }

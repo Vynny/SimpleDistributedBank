@@ -26,6 +26,15 @@ public abstract class InputHandler {
         }
     }
 
+    public boolean isUserIdValid(String userId) {
+        if (userId.length() > 2) {
+            String firstTwo = userId.substring(0, 2).toLowerCase();
+            if (firstTwo.equals("qc") || firstTwo.equals("mb") || firstTwo.equals("nb") || firstTwo.equals("bc"))
+                return true;
+        }
+        return false;
+    }
+
     protected abstract void parseInput(String input);
 
     protected abstract Enum<?> validateAction(String[] input);

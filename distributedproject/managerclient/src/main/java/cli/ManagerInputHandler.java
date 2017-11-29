@@ -32,41 +32,46 @@ public class ManagerInputHandler extends InputHandler {
         Action requestedAction = validateAction(fullCommand);
         if (requestedAction != Action.INVALID) {
 
-            try {
-                FrontEnd serverRemote = null;
+            String managerId = fullCommand[1];
+            if (isUserIdValid(managerId)) {
+                try {
+                    FrontEnd serverRemote = null;
 
-                if (requestedAction != Action.GET_ACCOUNT_COUNT && requestedAction != Action.TRANSFER)
-                    serverRemote = CORBAConnector.connectFrontEnd();
+                    if (requestedAction != Action.GET_ACCOUNT_COUNT && requestedAction != Action.TRANSFER)
+                        serverRemote = CORBAConnector.connectFrontEnd();
 
-                if (requestedAction == Action.GET_ACCOUNT_COUNT || requestedAction == Action.TRANSFER || serverRemote != null) {
+                    if (requestedAction == Action.GET_ACCOUNT_COUNT || requestedAction == Action.TRANSFER || serverRemote != null) {
 
-                    switch (requestedAction) {
-                        case CREATE_RECORD:
-                            BankLogger.logUserAction(fullCommand[1], serverRemote.createAccountRecord(fullCommand[1], fullCommand[2], fullCommand[3], fullCommand[4], fullCommand[5], fullCommand[6]));
-                            break;
-                        case EDIT_RECORD:
-                            BankLogger.logUserAction(fullCommand[1], serverRemote.editRecord(fullCommand[1], fullCommand[2], fullCommand[3], fullCommand[4]));
-                            break;
-                        case TRANSFER:
-                            //UDPBroadcaster.transferFund(fullCommand[1], fullCommand[2], fullCommand[3], fullCommand[4]);
-                            break;
-                        case GET_ACCOUNT_COUNT:
-                            //UDPBroadcaster.getAccountCount(fullCommand[1]);
-                            break;
-                        case DEPOSIT:
-                            BankLogger.logUserAction(fullCommand[1], serverRemote.deposit(fullCommand[2], fullCommand[3]));
-                            break;
-                        case WITHDRAW:
-                            BankLogger.logUserAction(fullCommand[1], serverRemote.withdraw(fullCommand[2], fullCommand[3]));
-                            break;
-                        case GETBALANCE:
-                            BankLogger.logUserAction(fullCommand[1], serverRemote.getBalance(fullCommand[2]));
-                            break;
+                        switch (requestedAction) {
+                            case CREATE_RECORD:
+                                BankLogger.logUserAction(managerId, serverRemote.createAccountRecord(fullCommand[1], fullCommand[2], fullCommand[3], fullCommand[4], fullCommand[5], fullCommand[6]));
+                                break;
+                            case EDIT_RECORD:
+                                BankLogger.logUserAction(managerId, serverRemote.editRecord(fullCommand[1], fullCommand[2], fullCommand[3], fullCommand[4]));
+                                break;
+                            case TRANSFER:
+                                //UDPBroadcaster.transferFund(managerId, fullCommand[2], fullCommand[3], fullCommand[4]);
+                                break;
+                            case GET_ACCOUNT_COUNT:
+                                //UDPBroadcaster.getAccountCount(managerId);
+                                break;
+                            case DEPOSIT:
+                                BankLogger.logUserAction(managerId, serverRemote.deposit(fullCommand[2], fullCommand[3]));
+                                break;
+                            case WITHDRAW:
+                                BankLogger.logUserAction(managerId, serverRemote.withdraw(fullCommand[2], fullCommand[3]));
+                                break;
+                            case GETBALANCE:
+                                BankLogger.logUserAction(managerId, serverRemote.getBalance(fullCommand[2]));
+                                break;
+                        }
+
                     }
-
+                } catch (Exception e) {
+                    System.out.println("Could not connect to remote branch server.");
                 }
-            } catch (Exception e) {
-                System.out.println("Could not connect to remote branch server.");
+            } else {
+                System.out.println("\nYou have entered an invalid manager id.\n");
             }
         } else {
             System.out.println("\nThat is not a valid action. Please consult the help command.\n");
