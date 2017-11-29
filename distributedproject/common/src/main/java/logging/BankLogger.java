@@ -2,6 +2,7 @@ package logging;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.UUID;
 import java.util.logging.FileHandler;
 import java.util.logging.SimpleFormatter;
 
@@ -10,6 +11,8 @@ public class BankLogger {
     private static final String DEAULT_LOG_NAME = "log";
     private static final String LOG_FOLDER = "logs";
     private static final String LOG_PATH = LOG_FOLDER + "/";
+
+    private static String serverLogFilename;
 
     public static synchronized void logUserAction(String userId, String message) {
         java.util.logging.Logger logger = java.util.logging.Logger.getLogger(userId);
@@ -55,7 +58,10 @@ public class BankLogger {
         java.util.logging.Logger logger = java.util.logging.Logger.getLogger(DEAULT_LOG_NAME);
 
         try {
-            String fileName = LOG_PATH + DEAULT_LOG_NAME + ".txt";
+            if (serverLogFilename == null) {
+                serverLogFilename = generateServerLogFilename();
+                System.out.println("Log name for server session: " + serverLogFilename);
+            }
 
             //Create logUserAction directory if doesn't exist
             File logDir = new File(LOG_FOLDER);
@@ -63,12 +69,12 @@ public class BankLogger {
                 logDir.mkdir();
 
             //Create logUserAction file if doesn't exist
-            File file = new File(fileName);
+            File file = new File(serverLogFilename);
             if (!file.exists())
                 file.createNewFile();
 
             //Init a file handler to write logUserAction output to
-            FileHandler fileHandler = new FileHandler(fileName, true);
+            FileHandler fileHandler = new FileHandler(serverLogFilename, true);
 
             //Remove console handler and add file handler to logger
             logger.setUseParentHandlers(false);
@@ -95,5 +101,9 @@ public class BankLogger {
         logAction("\nReturning message to client:");
         logAction(message);
         return message;
+    }
+
+    private static String generateServerLogFilename() {
+        return LOG_PATH + UUID.randomUUID() + ".txt";
     }
 }

@@ -79,6 +79,7 @@ public class ReplicaManager {
         while (isRunning) {
 
             //Incoming
+            System.out.println("\n Waiting for UDP message \n");
             Message inMessage = reliableUDP.receive();
             if (inMessage != null) {
                 System.out.println("Message Received: " + inMessage.getHeader().messageId);
