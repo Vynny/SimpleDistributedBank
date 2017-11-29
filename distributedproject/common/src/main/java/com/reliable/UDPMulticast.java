@@ -197,6 +197,7 @@ public class UDPMulticast extends Thread {
 
 	private Message buildNackMessage(String senderId, long first, long last) {
 		MessageHeader header = new MessageHeader();
+		header.senderId = senderId;
 		header.messageId = "NACK";
 		header.destinationId = groupId;
 		header.destinationAddress = group.getHostAddress();

@@ -28,8 +28,10 @@ public class UDPUnicastListener extends Thread {
 		}
 
 		try {
+			// if (address == null) {
 			if (port >= 0) {
 				socket = new DatagramSocket(port);
+				// socket = new DatagramSocket(address);
 			} else {
 				socket = new DatagramSocket();
 			}
@@ -43,6 +45,7 @@ public class UDPUnicastListener extends Thread {
 
 	public UDPUnicastListener(ConcurrentLinkedQueue<Message> messageBuffer, String id) throws SocketException {
 		this(messageBuffer, id, -1);
+		// this(messageBuffer, id, null);
 	}
 
 	public void run() {
@@ -138,7 +141,13 @@ public class UDPUnicastListener extends Thread {
 	}
 
 	public String getSocketAddress() {
-		return socket.getLocalAddress().getHostAddress();
+		try {
+			return InetAddress.getLocalHost().getHostAddress();
+		} catch (UnknownHostException e) {
+			System.err.println("Unable to retrieve local address");
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 }
