@@ -8,6 +8,7 @@ import messages.branch.BranchReplyBody;
 import messages.branch.BranchRequestBody;
 import server.Branch;
 import server.BranchServer;
+import server.radu.RaduBranchImpl;
 import server.sylvain.SylvainBranchImpl;
 
 import java.io.IOException;
@@ -51,6 +52,7 @@ public class ReplicaManager {
     private void startServer() {
         switch (serverImpl) {
             case RADU:
+                this.branchServer = new RaduBranchImpl(branch.toString());
                 break;
             case SYLVAIN:
                 this.branchServer = new SylvainBranchImpl(branch);
