@@ -14,7 +14,7 @@ public class Main {
 			e.printStackTrace();
 			System.exit(0);
 		}
-		
+		System.out.println("Sequencer Instantiated successfully");
 		seq.start();
 	}
 }
