@@ -17,7 +17,8 @@ public class BranchRequestBody implements MessageBody {
         
         ERROR_BYZANTINE,
         ERROR_CRASH,
-        
+
+        REQUEST_DB_DUMP
     }
 
     private OperationType operationType;
@@ -44,6 +45,13 @@ public class BranchRequestBody implements MessageBody {
         operationType = OperationType.ERROR_BYZANTINE;
 
         requestMap.put("originID", originID);
+
+        return this;
+    }
+
+    public BranchRequestBody requestDatabaseDump() {
+        requestMap = new HashMap<>();
+        operationType = OperationType.REQUEST_DB_DUMP;
 
         return this;
     }

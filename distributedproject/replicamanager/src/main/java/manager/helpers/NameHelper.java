@@ -4,10 +4,15 @@ import server.Branch;
 
 public class NameHelper {
 
-    public final static String NAME_PREFIX = "RM";
+    private final static String NAME_PREFIX = "RM";
+    private final static String SEQ_PREFIX = "SEQ";
 
     public static String generateId(int rmNumber, Branch branch) {
         return NAME_PREFIX + rmNumber + branch.toString();
+    }
+
+    public static String resolveSequencer(Branch branch) {
+        return SEQ_PREFIX + branch.toString();
     }
 
     public static Integer extractRmNumber(String rmId) {

@@ -17,6 +17,7 @@ import server.sylvain.SylvainBranchImpl;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.SocketException;
+import java.util.List;
 import java.util.Map;
 
 public class ReplicaManager {
@@ -36,12 +37,11 @@ public class ReplicaManager {
 
     //Errors Handle
     private int byzantineCount = 0;
-    private boolean isByzantine = false;
-    private boolean isCrash = false;
+    private boolean didFail = false;
 
     //Error Trigger
-    private boolean canFail = false;
-    private boolean shouldCrash = false;
+    private boolean canFail;
+    private boolean shouldCrash;
 
     /*
      * TRIGGERING BYZANTINE
@@ -75,6 +75,8 @@ public class ReplicaManager {
 
     //Start the manager
     private void startBranchServer() {
+        this.canFail = false;
+        this.shouldCrash = false;
         switch (serverImpl) {
             case RADU:
                 this.branchServer = new RaduBranchImpl(branch.toString());
@@ -124,25 +126,38 @@ public class ReplicaManager {
     private void processMessage(Message message) {
         //Get header and body
         MessageHeader header = message.getHeader();
-        BranchRequestBody body = (BranchRequestBody) message.getBody();
 
-        //Generate a reply
-        BranchReplyBody replyBody = handleBranchRequest(body);
+        if (!didFail) {
+            //Normal request from FE
+            BranchRequestBody body = (BranchRequestBody) message.getBody();
 
-        //Send the reply
-        try {
-            if (canFail && shouldCrash) {
-                //No nothing to simulate a crash
-            } else {
-                reliableUDP.reply(header, replyBody, "");
+            //Generate a reply
+            BranchReplyBody replyBody = handleBranchRequest(body, header);
+
+            //Send the reply
+            try {
+                if (canFail && shouldCrash) {
+                    //Do nothing to simulate a crash
+                } else {
+                    if (!didFail)
+                        reliableUDP.reply(header, replyBody, "");
+                }
+            } catch (SocketException e) {
+                e.printStackTrace();
             }
-        } catch (SocketException e) {
-            e.printStackTrace();
+        } else {
+            //Error restoration, waiting on db dump
+            BranchReplyBody body = (BranchReplyBody) message.getBody();
+
+            List<String> databaseDump = body.getReplyList();
+            this.branchServer.restoreDatabase(databaseDump);
+
+            resetErrorFlags();
         }
     }
 
     //Build a reply to a message, or take another action
-    private BranchReplyBody handleBranchRequest(BranchRequestBody branchRequestBody) {
+    private BranchReplyBody handleBranchRequest(BranchRequestBody branchRequestBody, MessageHeader header) {
         Map<String, String> requestMap = branchRequestBody.getRequestMap();
 
         String replyText = null;
@@ -185,21 +200,25 @@ public class ReplicaManager {
                 if (ErrorHelper.didIByzantine(rmId, byzantineRmId)) {
                     byzantineCount++;
                     if (byzantineCount == 3)
-                        handleByzantine(branchRequestBody);
+                        handleRestart();
                 }
                 break;
             case ERROR_CRASH:
                 String crashRmId1 = requestMap.get("originID1");
                 String crashRmId2 = requestMap.get("originID2");
                 if (ErrorHelper.didICrash(rmNumber, crashRmId1, crashRmId2))
-                    handleCrash(branchRequestBody);
+                    handleRestart();
+                break;
+            case REQUEST_DB_DUMP:
+                provideDatabaseDump(header);
                 break;
         }
 
-        System.out.println("Reply Generated " + replicaName());
-        System.out.println(replyText);
-
-        replyBody.setReply(replyText);
+        if (!didFail) {
+            System.out.println("Reply Generated " + replicaName());
+            System.out.println(replyText);
+            replyBody.setReply(replyText);
+        }
         return replyBody;
     }
 
@@ -209,15 +228,46 @@ public class ReplicaManager {
      * --------------
      */
 
-    private void handleByzantine(BranchRequestBody branchRequestBody) {
-        System.out.println("Notified of a byzantine failure! " + replicaName());
-        isByzantine = true;
+    private void handleRestart() {
+        System.out.println("Notified of a byzantine or crash failure! " + replicaName());
+        didFail = true;
+
+        //Restart Impl
+        System.out.println("Restarting server, using MA replica.");
+        this.serverImpl = ServerImpl.MATHIEU;
+        startBranchServer();
+        System.out.println("Branch server restarted. " + replicaName());
+
+        //Get DB Dump
+        requestDatabaseDump();
     }
 
+    private void requestDatabaseDump() {
+        System.out.println("Requesting a DB Dump");
+        BranchRequestBody dbDumpRequest = new BranchRequestBody().requestDatabaseDump();
+        try {
+            reliableUDP.send(dbDumpRequest, "", NameHelper.resolveSequencer(branch), rmId);
+            System.out.println("-DB Dump request sent");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-    private void handleCrash(BranchRequestBody branchRequestBody) {
-        System.out.println("Notified of a crash failure! " + replicaName());
-        isCrash = true;
+    private void provideDatabaseDump(MessageHeader header) {
+        //Generate the database dump
+        BranchReplyBody replyBody = new BranchReplyBody();
+        replyBody.setReplyList(this.branchServer.dumpDatabase());
+
+        //Send to crashed replica
+        try {
+            reliableUDP.reply(header, replyBody, "");
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void resetErrorFlags() {
+        this.didFail = false;
     }
 
     /*
