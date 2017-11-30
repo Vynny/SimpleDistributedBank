@@ -13,32 +13,33 @@ public class BranchRequestBody implements MessageBody {
         GET_BALANCE,
         CREATE_ACCOUNT_RECORD,
         EDIT_RECORD,
-        ERROR
+
+        ERROR_BYZANTINE,
+        ERROR_CRASH
     }
 
     private OperationType operationType;
     private Map<String, String> requestMap;
 
-    
+
     /*
-     * 
-     *-----------------
-     *Error operation
-     *----------------- 
-     * 
+     * ----------------
+     * Error Operations
+     * ----------------
      */
-    public BranchRequestBody notifyCrashError(String originID1,String originID2) {
+
+    public BranchRequestBody notifyCrashError(String originID1, String originID2) {
         requestMap = new HashMap<>();
-        operationType = OperationType.ERROR;
+        operationType = OperationType.ERROR_CRASH;
 
         requestMap.put("originID1", originID1);
         requestMap.put("originID2", originID2);
         return this;
     }
-    
+
     public BranchRequestBody notifyByzantineError(String originID) {
         requestMap = new HashMap<>();
-        operationType = OperationType.ERROR;
+        operationType = OperationType.ERROR_BYZANTINE;
 
         requestMap.put("originID", originID);
 

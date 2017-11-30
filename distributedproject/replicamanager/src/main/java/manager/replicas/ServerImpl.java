@@ -1,4 +1,4 @@
-package manager.impl;
+package manager.replicas;
 
 public enum ServerImpl {
     RADU,

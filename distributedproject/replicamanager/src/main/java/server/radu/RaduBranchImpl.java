@@ -26,7 +26,6 @@ public class RaduBranchImpl implements BranchServer {
 
     public void setDatabase(ServerDatabase db) {
         ser = db;
-
     }
 
     public void setUDPPort(int p) {
@@ -102,7 +101,7 @@ public class RaduBranchImpl implements BranchServer {
             return "Field name must be one of (address|phone)";
         }
            /*
-		   else if (fieldName.equals("branch") && (newValue.equals("QC") || newValue.equals("BC") || 
+           else if (fieldName.equals("branch") && (newValue.equals("QC") || newValue.equals("BC") ||
 				   newValue.equals("MB") || newValue.equals("NB"))) {
 			   userInfo.set(2,newValue);
 			   ser.updateClientList(userInfo);
@@ -383,9 +382,7 @@ public class RaduBranchImpl implements BranchServer {
             ser.trackOperation("The client with ID " + customerID + ", known as " + userInfo.get(3) + " " + userInfo.get(4) +
                     ", has checked their account. Date: " + timeStamp);
 
-
-            String ret = "Account Balance for Customer customerId: " + formatter.format(currentBalance);
-            return ret;
+            return "Account Balance for Customer " + customerID + ": " + formatter.format(currentBalance);
         } else {
             return "Could not find customer with id " + customerID;
         }

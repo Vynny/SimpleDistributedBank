@@ -1,6 +1,6 @@
 import manager.ReplicaManager;
 import server.Branch;
-import manager.impl.ServerImpl;
+import manager.replicas.ServerImpl;
 
 public class Main {
 

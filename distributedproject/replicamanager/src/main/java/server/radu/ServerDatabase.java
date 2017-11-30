@@ -135,14 +135,14 @@ public class ServerDatabase {
         List<String> s2 = new ArrayList<String>();
 
         s.add(branch + "C1000");
-        s.add("500");
+        s.add("0");
         s.add(branch);
         s.add("Radu");
         s.add("Saghin");
         s.add("Terrebonne");
         s.add("514");
         s2.add(branch + "M1111");
-        s2.add("500");
+        s2.add("0");
         s2.add(branch);
         s2.add("Loco");
         s2.add("Toto");

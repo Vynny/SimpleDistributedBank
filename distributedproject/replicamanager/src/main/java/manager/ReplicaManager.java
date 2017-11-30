@@ -3,7 +3,9 @@ package manager;
 import com.message.Message;
 import com.message.MessageHeader;
 import com.reliable.ReliableUDP;
-import manager.impl.ServerImpl;
+import manager.helpers.ErrorHelper;
+import manager.helpers.NameHelper;
+import manager.replicas.ServerImpl;
 import messages.branch.BranchReplyBody;
 import messages.branch.BranchRequestBody;
 import server.Branch;
@@ -17,11 +19,9 @@ import java.util.Map;
 
 public class ReplicaManager {
 
-    public final static String NAME_PREFIX = "RM";
-
     //Naming
-    private int rmId;
-    private String rmName;
+    private int rmNumber;
+    private String rmId;
 
     //Branch Implementation
     private Branch branch;
@@ -32,15 +32,19 @@ public class ReplicaManager {
     private ReliableUDP reliableUDP;
     private boolean isRunning = false;
 
-    public ReplicaManager(int rmId, Branch branch, ServerImpl serverImpl) {
-        this.rmId = rmId;
+    //Errors
+    private boolean isByzantine = false;
+    private boolean isCrash = false;
+
+    public ReplicaManager(int rmNumber, Branch branch, ServerImpl serverImpl) {
+        this.rmNumber = rmNumber;
         this.serverImpl = serverImpl;
         this.branch = branch;
 
-        this.rmName = NAME_PREFIX + rmId + branch.toString();
+        this.rmId = NameHelper.generateId(rmNumber, branch);
 
         //Start Services
-        startServer();
+        startBranchServer();
         startNetworking();
 
         //Start handling requests
@@ -48,8 +52,14 @@ public class ReplicaManager {
         handleRequests();
     }
 
+    /*
+     * ----------------
+     * Init Operations
+     * ----------------
+     */
+
     //Start the manager
-    private void startServer() {
+    private void startBranchServer() {
         switch (serverImpl) {
             case RADU:
                 this.branchServer = new RaduBranchImpl(branch.toString());
@@ -65,31 +75,35 @@ public class ReplicaManager {
     //Start the networking stack
     private void startNetworking() {
         try {
-            this.reliableUDP = new ReliableUDP(rmName);
+            this.reliableUDP = new ReliableUDP(rmId);
             this.reliableUDP.startUDPMulticast();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    /*
+     * ----------------
+     * Request Handling
+     * ----------------
+     */
+
     //Handle requests
     private void handleRequests() {
-        System.out.println("Waiting for messages");
+        System.out.println("Replica manager started " + replicaName());
 
         while (isRunning) {
-
             //Incoming
             System.out.println("\n Waiting for UDP message \n");
             Message inMessage = reliableUDP.receive();
             if (inMessage != null) {
-                System.out.println("Message Received: " + inMessage.getHeader().messageId);
+                System.out.println("Message Received, ID: " + inMessage.getHeader().messageId);
                 processMessage(inMessage);
             }
-
         }
-
     }
 
+    //Handle messages from sequencer
     private void processMessage(Message message) {
         //Get header and body
         MessageHeader header = message.getHeader();
@@ -106,39 +120,80 @@ public class ReplicaManager {
         }
     }
 
+    //Build a reply to a message, or take another action
     private BranchReplyBody handleBranchRequest(BranchRequestBody branchRequestBody) {
         Map<String, String> requestMap = branchRequestBody.getRequestMap();
 
+        String replyText = null;
         BranchReplyBody replyBody = new BranchReplyBody();
         switch (branchRequestBody.getOperationType()) {
             case DEPOSIT:
-                replyBody.setReply(branchServer.deposit(requestMap.get("customerId"), requestMap.get("amount")));
+                replyText = branchServer.deposit(requestMap.get("customerId"), requestMap.get("amount"));
                 break;
             case WITHDRAW:
-                replyBody.setReply(branchServer.withdraw(requestMap.get("customerId"), requestMap.get("amount")));
+                replyText = branchServer.withdraw(requestMap.get("customerId"), requestMap.get("amount"));
                 break;
             case GET_BALANCE:
-                replyBody.setReply(branchServer.getBalance(requestMap.get("customerId")));
+                replyText = branchServer.getBalance(requestMap.get("customerId"));
                 break;
             case CREATE_ACCOUNT_RECORD:
-                replyBody.setReply(branchServer.createAccountRecord(requestMap.get("managerId"),
+                replyText = branchServer.createAccountRecord(requestMap.get("managerId"),
                         requestMap.get("firstName"),
                         requestMap.get("lastName"),
                         requestMap.get("address"),
                         requestMap.get("phone"),
-                        requestMap.get("branch")));
+                        requestMap.get("branch"));
                 break;
             case EDIT_RECORD:
-                replyBody.setReply(branchServer.editRecord(requestMap.get("managerId"),
+                replyText = branchServer.editRecord(requestMap.get("managerId"),
                         requestMap.get("customerId"),
                         requestMap.get("fieldName"),
-                        requestMap.get("newValue")));
+                        requestMap.get("newValue"));
                 break;
-            case ERROR:
-                //TODO: Branch Error
+            case ERROR_BYZANTINE:
+                String byzantineRmId = requestMap.get("originID");
+                if (ErrorHelper.didIByzantine(rmId, byzantineRmId))
+                    handleByzantine(branchRequestBody);
+                break;
+            case ERROR_CRASH:
+                String crashRmId1 = requestMap.get("originID1");
+                String crashRmId2 = requestMap.get("originID2");
+                if (ErrorHelper.didICrash(rmNumber, crashRmId1, crashRmId2))
+                    handleCrash(branchRequestBody);
                 break;
         }
 
+        System.out.println("Reply Generated " + replicaName());
+        System.out.println(replyText);
+
+        replyBody.setReply(replyText);
         return replyBody;
+    }
+
+    /*
+     * --------------
+     * Error Handling
+     * --------------
+     */
+
+    private void handleByzantine(BranchRequestBody branchRequestBody) {
+        System.out.println("Notified of a byzantine failure! " + replicaName());
+        isByzantine = true;
+    }
+
+
+    private void handleCrash(BranchRequestBody branchRequestBody) {
+        System.out.println("Notified of a crash failure! " + replicaName());
+        isCrash = true;
+    }
+
+    /*
+     * ---------
+     * Utilities
+     * ---------
+     */
+
+    private String replicaName() {
+        return "(ID: " + rmId + ", REPLICA: " + serverImpl.toString() + ")";
     }
 }
