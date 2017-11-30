@@ -276,10 +276,8 @@ public class ReplicaManager {
      * --------------
      */
 
-    public boolean shouldCrash(String amount) {
-        if (new BigDecimal(amount).compareTo(new BigDecimal("42")) == 0)
-            return true;
-        return false;
+    private boolean shouldCrash(String amount) {
+        return new BigDecimal(amount).compareTo(new BigDecimal("42")) == 0;
     }
 
     /*
