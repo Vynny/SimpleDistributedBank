@@ -96,6 +96,10 @@ public class BranchImpl {
 
 		return record.getAccountTotal();
 	}
+	
+	public int getAccountCount() {
+		return customerRecordMap.size();
+	}
 
 	// public double transferFund(String sourceCustomerId, double amount, String
 	// destinationCustomerId) {
