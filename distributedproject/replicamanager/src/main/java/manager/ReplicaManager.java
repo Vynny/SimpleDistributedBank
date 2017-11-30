@@ -131,8 +131,11 @@ public class ReplicaManager {
 
         //Send the reply
         try {
-            if (!shouldCrash)
+            if (canFail && shouldCrash) {
+                //No nothing to simulate a crash
+            } else {
                 reliableUDP.reply(header, replyBody, "");
+            }
         } catch (SocketException e) {
             e.printStackTrace();
         }
@@ -148,8 +151,10 @@ public class ReplicaManager {
             case DEPOSIT:
                 replyText = branchServer.deposit(requestMap.get("customerId"), requestMap.get("amount"));
 
-                if (shouldCrash(requestMap.get("amount")))
+                if (shouldCrash(requestMap.get("amount"))) {
+                    System.out.println("!!! CRASH ERROR TRIGGERED !!");
                     this.shouldCrash = true;
+                }
 
                 break;
             case WITHDRAW:
