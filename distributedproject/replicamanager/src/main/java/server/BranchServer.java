@@ -71,4 +71,10 @@ public interface BranchServer {
      * return: "Could not find customer with id customerId"
      */
     String getBalance(String customerId);
+
+    /*
+     * return: "BRANCH: COUNT"
+     *  ex: "QC: 5"
+     */
+    String getAccountCount();
 }

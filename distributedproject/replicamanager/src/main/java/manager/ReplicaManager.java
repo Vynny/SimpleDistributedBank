@@ -10,6 +10,7 @@ import messages.branch.BranchReplyBody;
 import messages.branch.BranchRequestBody;
 import server.Branch;
 import server.BranchServer;
+import server.mathieu.branch.MathieuBranchImpl;
 import server.radu.RaduBranchImpl;
 import server.sylvain.SylvainBranchImpl;
 
@@ -68,6 +69,7 @@ public class ReplicaManager {
                 this.branchServer = new SylvainBranchImpl(branch);
                 break;
             case MATHIEU:
+                this.branchServer = new MathieuBranchImpl(branch.toString());
                 break;
         }
     }

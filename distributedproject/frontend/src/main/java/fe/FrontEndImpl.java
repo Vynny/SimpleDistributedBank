@@ -311,6 +311,7 @@ public class FrontEndImpl extends FrontEndPOA {
 		success = false;
 		try {
 			BranchRequestBody body = new BranchRequestBody().getBalance(customerID);
+			System.out.println("SENDING");
 			udp.send(body, "getBalance", resolveSequencerId(customerID), FEID);
 		}
 		catch(Exception e) {
