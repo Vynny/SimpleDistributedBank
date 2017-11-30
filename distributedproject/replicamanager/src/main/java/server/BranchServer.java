@@ -1,5 +1,7 @@
 package server;
 
+import java.util.List;
+
 public interface BranchServer {
 
     /*
@@ -77,4 +79,10 @@ public interface BranchServer {
      *  ex: "QC: 5"
      */
     String getAccountCount();
+
+
+
+    List<String> dumpDatabase();
+
+    void restoreDatabase(List<String> databaseDump);
 }

@@ -11,6 +11,7 @@ import server.sylvain.server.database.CustomerDatabase;
 import server.sylvain.server.database.ManagerDatabase;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 
 public class SylvainBranchImpl implements BranchServer {
@@ -174,5 +175,16 @@ public class SylvainBranchImpl implements BranchServer {
     @Override
     public String getAccountCount() {
         return thisBranch.toString() + ": " + this.customerDatabase.getCustomerCount();
+    }
+
+    @Override
+    public List<String> dumpDatabase() {
+        //NOT SUPPORTED
+        return null;
+    }
+
+    @Override
+    public void restoreDatabase(List<String> databaseDump) {
+        //NOT SUPPORTED
     }
 }

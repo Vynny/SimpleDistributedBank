@@ -393,4 +393,14 @@ public class RaduBranchImpl implements BranchServer {
         //TODO: get account count
         return null;
     }
+
+    @Override
+    public List<String> dumpDatabase() {
+        return null;
+    }
+
+    @Override
+    public void restoreDatabase(List<String> databaseDump) {
+
+    }
 }

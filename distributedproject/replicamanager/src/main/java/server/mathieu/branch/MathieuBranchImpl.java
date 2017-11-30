@@ -1,6 +1,7 @@
 package server.mathieu.branch;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import server.BranchServer;
 
@@ -88,6 +89,17 @@ public class MathieuBranchImpl implements BranchServer {
 	@Override
 	public String getAccountCount() {
 		return branchServer.ID + ": " + branchServer.getAccountCount();
+	}
+
+	@Override
+	public List<String> dumpDatabase() {
+		//TODO: Make db a list of strings
+		return null;
+	}
+
+	@Override
+	public void restoreDatabase(List<String> databaseDump) {
+		//TODO: Restore database from that same list
 	}
 
 }
