@@ -1,6 +1,7 @@
 ### Logs ###
 logs/
 replicamanager/*.txt
+replicamanager/*.log
 
 #### CORBA ###
 orb.db/

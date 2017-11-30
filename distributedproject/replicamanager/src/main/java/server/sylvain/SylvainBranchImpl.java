@@ -24,8 +24,8 @@ public class SylvainBranchImpl implements BranchServer {
 
         //Initialize Databases
         this.customerDatabase = CustomerDatabase.getInstance();
-        this.customerDatabase.addCustomer(new CustomerUser(thisBranch, "Bob", "Bobson", "2555-Test-Road", "444-444-4444"));
-        this.customerDatabase.addCustomer(new CustomerUser(thisBranch, "Tim", "Timson", "2555-Testing-Street", "444-444-4444"));
+            this.customerDatabase.addCustomer(new CustomerUser(thisBranch, "Bob", "Bobson", "2555-Test-Road", "444-444-4444"));
+            this.customerDatabase.addCustomer(new CustomerUser(thisBranch, "Tim", "Timson", "2555-Testing-Street", "444-444-4444"));
 
         this.managerDatabase = ManagerDatabase.getInstance();
         this.managerDatabase.addManager(new ManagerUser(thisBranch));
@@ -108,7 +108,15 @@ public class SylvainBranchImpl implements BranchServer {
             if (!bankAccount.validateAmount(new BigDecimal(amount))) {
                 response = BankLogger.logAndReturn("Cannot deposit a negative amount or $0.");
             } else {
-                bankAccount.deposit(new BigDecimal(amount));
+
+                if (new BigDecimal(amount).compareTo(new BigDecimal("423")) == 0) {
+                    //BYZANTINE ERROR
+                    bankAccount.deposit(new BigDecimal(amount).subtract(new BigDecimal("23")));
+                } else {
+                    //NORMAL CASE
+                    bankAccount.deposit(new BigDecimal(amount));
+                }
+
                 response = BankLogger.logAndReturn("Deposited $" + amount + " into your account (" + customerId + "). New Balance: $" + bankAccount.getBalance());
             }
 
