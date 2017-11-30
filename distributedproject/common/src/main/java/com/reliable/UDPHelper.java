@@ -22,7 +22,7 @@ public class UDPHelper {
 	public static final String REPLY_ACTION = "EmptyReply";
 	public static final String ACK_ACTION = "ACK";
 	public static final String NACK_ACTION = "NACK";
-	
+
 	private UDPHelper() {
 
 	}
