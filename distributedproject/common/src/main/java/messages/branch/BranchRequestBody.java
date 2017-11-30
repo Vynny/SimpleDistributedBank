@@ -13,9 +13,11 @@ public class BranchRequestBody implements MessageBody {
         GET_BALANCE,
         CREATE_ACCOUNT_RECORD,
         EDIT_RECORD,
-
+        GET_ACCOUNT_COUNT,
+        
         ERROR_BYZANTINE,
-        ERROR_CRASH
+        ERROR_CRASH,
+        
     }
 
     private OperationType operationType;
@@ -86,7 +88,14 @@ public class BranchRequestBody implements MessageBody {
      * Manager Operations
      * --------------------
      */
+    public BranchRequestBody getAccountCount(String managerId) {
+        requestMap = new HashMap<>();
+        operationType = OperationType.GET_ACCOUNT_COUNT;
 
+        requestMap.put("managerID", managerId);
+
+        return this;
+    }
     public BranchRequestBody createAccountRecord(String managerId, String firstName, String lastName, String address, String phone, String branch) {
         requestMap = new HashMap<>();
         operationType = OperationType.CREATE_ACCOUNT_RECORD;
