@@ -19,233 +19,255 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class UDPMulticast extends Thread {
-    private static final Comparator<Message> MESSAGE_SEQUENCE_COMPARATOR = new Comparator<Message>() {
-        @Override
-        public int compare(Message m1, Message m2) {
-            MessageHeader m1Header = m1.getHeader();
-            MessageHeader m2Header = m2.getHeader();
-            if (m1Header.sequenceNumber < m2Header.sequenceNumber) {
-                return -1;
-            } else if (m1Header.sequenceNumber == m2Header.sequenceNumber) {
-                return 0;
-            } else {
-                return 1;
-            }
-        }
-    };
+	private static final Comparator<Message> MESSAGE_SEQUENCE_COMPARATOR = new Comparator<Message>() {
+		@Override
+		public int compare(Message m1, Message m2) {
+			MessageHeader m1Header = m1.getHeader();
+			MessageHeader m2Header = m2.getHeader();
+			if (m1Header.sequenceNumber < m2Header.sequenceNumber) {
+				return -1;
+			} else if (m1Header.sequenceNumber == m2Header.sequenceNumber) {
+				return 0;
+			} else {
+				return 1;
+			}
+		}
+	};
 
-    private MulticastSocket socket;
-    private String groupId;
-    private String clientId;
-    private InetAddress group;
-    private int groupPort;
-    private BlockingQueue<Message> messageBuffer;
+	private MulticastSocket socket;
+	private String groupId;
+	private String clientId;
+	private InetAddress group;
+	private int groupPort;
+	private BlockingQueue<Message> messageBuffer;
 
-    /**
-     * Origin holdBackQueues
-     */
-    private Map<String, PriorityQueue<Message>> holdBackQueues;
+	/**
+	 * Origin holdBackQueues
+	 */
+	private Map<String, PriorityQueue<Message>> holdBackQueues;
 
-    private long sendSequenceNumber = 0;
+	private long sendSequenceNumber = 0;
 
-    /**
-     * Mapping of ClientId to integer for the last received sequence numbers for
-     * Ack.
-     */
-    private Map<String, Long> lastReceivedSequenceNumbers;
+	/**
+	 * Mapping of ClientId to integer for the last received sequence numbers for
+	 * Ack.
+	 */
+	private Map<String, Long> lastReceivedSequenceNumbers;
 
-    public UDPMulticast(BlockingQueue<Message> messageBuffer, String clientId, String groupId,
-                        InetAddress group, int port) throws IOException {
-        if (messageBuffer == null) {
-            throw new IllegalArgumentException("No buffer");
-        }
+	private Map<Long, Message> messageHistory;
 
-        try {
-            socket = new MulticastSocket(port);
-            socket.joinGroup(group);
-        } catch (SocketException e) {
-            System.err.println("Unable to start the UDP Server");
-            throw e;
-        }
+	public UDPMulticast(BlockingQueue<Message> messageBuffer, String clientId, String groupId, InetAddress group,
+			int port) throws IOException {
+		if (messageBuffer == null) {
+			throw new IllegalArgumentException("No buffer");
+		}
 
-        this.clientId = clientId;
-        this.groupId = groupId;
-        this.groupPort = port;
-        this.group = group;
-        this.messageBuffer = messageBuffer;
-        this.holdBackQueues = new HashMap<>();
-        this.lastReceivedSequenceNumbers = Collections.synchronizedMap(new HashMap<>());
-    }
+		try {
+			socket = new MulticastSocket(port);
+			socket.joinGroup(group);
+		} catch (SocketException e) {
+			System.err.println("Unable to start the UDP Server");
+			throw e;
+		}
 
-    public void multicast(Message message) {
-        if (message == null) {
-            throw new IllegalArgumentException("Message cannot be null");
-        }
+		this.clientId = clientId;
+		this.groupId = groupId;
+		this.groupPort = port;
+		this.group = group;
+		this.messageBuffer = messageBuffer;
+		this.holdBackQueues = new HashMap<>();
+		this.lastReceivedSequenceNumbers = Collections.synchronizedMap(new HashMap<>());
+		this.messageHistory = new ConcurrentHashMap<>();
+	}
 
-        if (!groupId.equals(message.getHeader().group)) {
-            throw new IllegalArgumentException("The message is not destined to this group");
-        }
+	public void multicast(Message message) {
+		if (message == null) {
+			throw new IllegalArgumentException("Message cannot be null");
+		}
 
-        message.getHeader().sequenceNumber = getNextSequenceNumber();
-        message.getHeader().acks = getPiggybackAcks();
+		if (!groupId.equals(message.getHeader().group)) {
+			throw new IllegalArgumentException("The message is not destined to this group");
+		}
 
-        new Thread() {
-            public void run() {
-                DatagramPacket requestPacket = UDPHelper.buildDatagramPacket(message);
+		message.getHeader().sequenceNumber = getNextSequenceNumber();
+		message.getHeader().acks = getPiggybackAcks();
 
-                DatagramSocket socket = null;
-                try {
-                    socket = new DatagramSocket();
-                    socket.send(requestPacket);
-                } catch (IOException e) {
-                    System.err.println("Unable to multicast request");
-                    e.printStackTrace();
-                    return;
-                }
-                socket.close();
-            }
-        }.start();
-    }
+		messageHistory.put(message.getHeader().sequenceNumber, message);
+		asyncSend(message);
+	}
 
-    public void run() {
-        while (true) {
-            byte[] requestBuffer = new byte[UDPHelper.MESSAGE_MAX_SIZE];
-            DatagramPacket requestPacket = new DatagramPacket(requestBuffer, requestBuffer.length);
-            try {
-                socket.receive(requestPacket);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            Message requestMessage = UDPHelper.decodeDatagramPacket(requestPacket);
-            if (requestMessage == null) {
-                System.err.println("Received an invalid request Object");
-                continue;
-            }
+	private void asyncSend(Message message) {
+		new Thread() {
+			public void run() {
+				DatagramPacket requestPacket = UDPHelper.buildDatagramPacket(message);
 
-            // Drop message if this isn't its destination or its our own message
-            if (!groupId.equals(requestMessage.getHeader().group)
-                    || clientId.equals(requestMessage.getHeader().senderId)) {
-                continue;
-            } else {
-                handleRequest(requestMessage);
-            }
-        }
-    }
+				DatagramSocket socket = null;
+				try {
+					socket = new DatagramSocket();
+					socket.send(requestPacket);
+				} catch (IOException e) {
+					System.err.println("Unable to multicast request");
+					e.printStackTrace();
+					return;
+				}
+				socket.close();
+			}
+		}.start();
+	}
 
-    private void handleRequest(Message requestMessage) {
-        MessageHeader requestHeader = requestMessage.getHeader();
+	public void run() {
+		while (true) {
+			byte[] requestBuffer = new byte[UDPHelper.MESSAGE_MAX_SIZE];
+			DatagramPacket requestPacket = new DatagramPacket(requestBuffer, requestBuffer.length);
+			try {
+				socket.receive(requestPacket);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			Message requestMessage = UDPHelper.decodeDatagramPacket(requestPacket);
+			if (requestMessage == null) {
+				System.err.println("Received an invalid request Object");
+				continue;
+			}
 
-        long lastSequenceFromSender = getLastReceivedFrom(requestHeader.senderId);
-        if (requestHeader.sequenceNumber <= lastSequenceFromSender) {
-            // Already delivered this message, Drop it
-            return;
-        } else {
-            // Hold it
-            addMessageToHoldBackQueue(requestMessage);
-        }
+			// Drop message if this isn't its destination or its our own message
+			if (!groupId.equals(requestMessage.getHeader().group)
+					|| clientId.equals(requestMessage.getHeader().senderId)) {
+				continue;
+			} else if (UDPHelper.NACK_ACTION.equals(requestMessage.getAction())) {
+				handleResendRequest(requestMessage);
+			} else {
+				handleRequest(requestMessage);
+			}
+		}
+	}
 
-        deliverFromHoldBackQueue(requestHeader.senderId, lastSequenceFromSender);
+	private void handleResendRequest(Message requestMessage) {
+		NACKBody nackBody = (NACKBody) requestMessage.getBody();
+		if (clientId.equals(nackBody.originId)) {
+			for (long i = nackBody.firstMissingId; i <= nackBody.lastMissingId; i++) {
+				asyncSend(messageHistory.get(i));
+			}
+		}
+	}
 
-        // Check if we're missing message from the group
-        handleMissingMessageFromGroup(requestHeader);
-    }
+	private void handleRequest(Message requestMessage) {
+		MessageHeader requestHeader = requestMessage.getHeader();
 
-    private void deliverFromHoldBackQueue(String senderId, long lastSequenceNumber) {
-        PriorityQueue<Message> queue = holdBackQueues.get(senderId);
+		long lastSequenceFromSender = getLastReceivedFrom(requestHeader.senderId);
+		if (requestHeader.sequenceNumber <= lastSequenceFromSender) {
+			// Already delivered this message, Drop it
+			return;
+		} else {
+			// Hold it
+			addMessageToHoldBackQueue(requestMessage);
+		}
 
-        boolean hasDelivered = false;
-        while (!queue.isEmpty()) {
-            long nextSequenceNumberInQueue = queue.peek().getHeader().sequenceNumber;
-            if (nextSequenceNumberInQueue > lastSequenceNumber + 1) {
-                // Missing messages
-                requestMissingMessages(senderId, lastSequenceNumber + 1, nextSequenceNumberInQueue - 1);
-                break;
-            } else {
-                messageBuffer.add(queue.poll());
-                hasDelivered = true;
-                lastSequenceNumber++;
-            }
-        }
+		deliverFromHoldBackQueue(requestHeader.senderId, lastSequenceFromSender);
 
-        if (hasDelivered) {
-            lastReceivedSequenceNumbers.put(senderId, lastSequenceNumber);
+		// Check if we're missing message from the group
+		handleMissingMessageFromGroup(requestHeader);
+	}
 
-        }
-    }
+	private void deliverFromHoldBackQueue(String senderId, long lastSequenceNumber) {
+		PriorityQueue<Message> queue = holdBackQueues.get(senderId);
 
-    private void requestMissingMessages(String senderId, long first, long last) {
-        new Thread() {
-            public void run() {
-                Message message = buildNackMessage(senderId, first, last);
-                DatagramPacket requestPacket = UDPHelper.buildDatagramPacket(message);
+		boolean hasDelivered = false;
+		while (!queue.isEmpty()) {
+			long nextSequenceNumberInQueue = queue.peek().getHeader().sequenceNumber;
+			if (nextSequenceNumberInQueue > lastSequenceNumber + 1) {
+				// Missing messages
+				requestMissingMessages(senderId, lastSequenceNumber + 1, nextSequenceNumberInQueue - 1);
+				break;
+			} else {
+				messageBuffer.add(queue.poll());
+				hasDelivered = true;
+				lastSequenceNumber++;
+			}
+		}
 
-                DatagramSocket socket = null;
-                try {
-                    socket = new DatagramSocket();
-                    socket.send(requestPacket);
-                } catch (IOException e) {
-                    System.err.println("Unable to multicast request");
-                    e.printStackTrace();
-                    return;
-                }
-                socket.close();
-            }
-        }.start();
-    }
+		if (hasDelivered) {
+			lastReceivedSequenceNumbers.put(senderId, lastSequenceNumber);
 
-    private Message buildNackMessage(String senderId, long first, long last) {
-        MessageHeader header = new MessageHeader();
-        header.senderId = senderId;
-        header.messageId = "NACK";
-        header.destinationId = groupId;
-        header.destinationAddress = group.getHostAddress();
-        header.destinationPort = groupPort;
+		}
+	}
 
-        NACKBody body = new NACKBody(senderId, first, last);
-        Message message = new Message(UDPHelper.NACK_ACTION, header, body);
+	private void requestMissingMessages(String senderId, long first, long last) {
+		new Thread() {
+			public void run() {
+				Message message = buildNackMessage(senderId, first, last);
+				DatagramPacket requestPacket = UDPHelper.buildDatagramPacket(message);
 
-        return message;
-    }
+				DatagramSocket socket = null;
+				try {
+					socket = new DatagramSocket();
+					socket.send(requestPacket);
+				} catch (IOException e) {
+					System.err.println("Unable to multicast request");
+					e.printStackTrace();
+					return;
+				}
+				socket.close();
+			}
+		}.start();
+	}
 
-    private void addMessageToHoldBackQueue(Message message) {
-        PriorityQueue<Message> queue = holdBackQueues.get(message.getHeader().senderId);
-        if (queue == null) {
-            queue = new PriorityQueue<Message>(MESSAGE_SEQUENCE_COMPARATOR);
-            holdBackQueues.put(message.getHeader().senderId, queue);
-        }
-        if (!queue.contains(message)) {
-            queue.add(message);
-        }
-    }
+	private Message buildNackMessage(String originSenderId, long first, long last) {
+		MessageHeader header = new MessageHeader();
+		header.senderId = clientId;
+		header.messageId = "NACK";
+		header.group = groupId;
+		header.destinationId = groupId;
+		header.destinationAddress = group.getHostAddress();
+		header.destinationPort = groupPort;
 
-    private void handleMissingMessageFromGroup(MessageHeader requestHeader) {
-        // TODO If necessary, only if members other than sequencer need to multicast
-    }
+		NACKBody body = new NACKBody(originSenderId, first, last);
+		Message message = new Message(UDPHelper.NACK_ACTION, header, body);
 
-    private long getLastReceivedFrom(String senderId) {
-        Long lastSeqInMap = lastReceivedSequenceNumbers.get(senderId);
+		return message;
+	}
 
-        if (lastSeqInMap == null) {
-            return 0;
-        } else {
-            return lastSeqInMap;
-        }
-    }
+	private void addMessageToHoldBackQueue(Message message) {
+		PriorityQueue<Message> queue = holdBackQueues.get(message.getHeader().senderId);
+		if (queue == null) {
+			queue = new PriorityQueue<Message>(MESSAGE_SEQUENCE_COMPARATOR);
+			holdBackQueues.put(message.getHeader().senderId, queue);
+		}
+		if (!queue.contains(message)) {
+			queue.add(message);
+		}
+	}
 
-    private Map<String, Long> getPiggybackAcks() {
-        Map<String, Long> piggybackAcks = new TreeMap<>();
-        Set<Entry<String, Long>> acksEntries = lastReceivedSequenceNumbers.entrySet();
-        synchronized (lastReceivedSequenceNumbers) {
-            for (Entry<String, Long> entry : acksEntries) {
-                piggybackAcks.put(entry.getKey(), entry.getValue());
-            }
-        }
-        return piggybackAcks;
-    }
+	private void handleMissingMessageFromGroup(MessageHeader requestHeader) {
+		// TODO If necessary, only if members other than sequencer need to multicast
 
-    private synchronized long getNextSequenceNumber() {
-        return ++sendSequenceNumber;
-    }
+	}
+
+	private long getLastReceivedFrom(String senderId) {
+		Long lastSeqInMap = lastReceivedSequenceNumbers.get(senderId);
+
+		if (lastSeqInMap == null) {
+			return 0;
+		} else {
+			return lastSeqInMap;
+		}
+	}
+
+	private Map<String, Long> getPiggybackAcks() {
+		Map<String, Long> piggybackAcks = new TreeMap<>();
+		Set<Entry<String, Long>> acksEntries = lastReceivedSequenceNumbers.entrySet();
+		synchronized (lastReceivedSequenceNumbers) {
+			for (Entry<String, Long> entry : acksEntries) {
+				piggybackAcks.put(entry.getKey(), entry.getValue());
+			}
+		}
+		return piggybackAcks;
+	}
+
+	private synchronized long getNextSequenceNumber() {
+		return ++sendSequenceNumber;
+	}
 }
