@@ -75,4 +75,15 @@ public class CustomerRecord {
 		return account.getAccountTotal();
 	}
 
+	/**
+	 * Returns the record as a String.
+	 * 
+	 * @return entry as format firstName;lastName;address;phone;
+	 *         accountNumber;accountTotal
+	 */
+	@Override
+	public String toString() {
+		return getFirstName() + ";" + getLastName() + ";" + getAddress() + ";" + getPhone() + ";" + getAccountNumber()
+				+ ";" + getAccountTotal();
+	}
 }

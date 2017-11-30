@@ -93,13 +93,12 @@ public class MathieuBranchImpl implements BranchServer {
 
 	@Override
 	public List<String> dumpDatabase() {
-		//TODO: Make db a list of strings
-		return null;
+		return branchServer.saveCustomerRecords();
 	}
 
 	@Override
 	public void restoreDatabase(List<String> databaseDump) {
-		//TODO: Restore database from that same list
+		branchServer.loadCustomerRecords(databaseDump);
 	}
 
 }

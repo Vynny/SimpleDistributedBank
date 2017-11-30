@@ -1,5 +1,7 @@
 package server.mathieu.branch;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
@@ -178,6 +180,33 @@ public class BranchImpl {
 		}
 		addCustomer(record);
 	}
+	
+	/**
+	 * Load List of string (; separator) with Customer Records into the branch.
+	 * 
+	 * @param branch
+	 * @param inputFile
+	 *            input string of the form (firstName;lastName;address;phone;
+	 *            accountNumber;accountTotal)
+	 * @return
+	 */
+	public void loadCustomerRecords(List<String> input) {
+		for (String recordLine : input) {
+			String[] fields = recordLine.split(";");
+			CustomerRecord record = new CustomerRecord(fields[0], fields[1], fields[2], fields[3],
+					Integer.parseInt(fields[4]));
+			loadCustomerRecord(record);
+			BranchImpl.logger.println("Loading record from " + recordLine);
+		}
+	}
+	
+	public List<String> saveCustomerRecords() {
+		List<String> db = new LinkedList<>();
+		for(CustomerRecord record : customerRecordMap.values()) {
+			db.add(record.toString());
+		}
+		return db;
+	}
 
 	public void loadManagerRecord(String managerId) {
 		if (managerId == null) {
@@ -186,15 +215,8 @@ public class BranchImpl {
 
 		managerMap.put(managerId, ID);
 	}
-
-	private void loadCustomerData() {
-		DataLoader.loadCustomerRecord(this, "customerData" + ID + ".csv");
-	}
-
-	private void loadManagerData() {
-		DataLoader.loadManager(this, "managerData" + ID + ".csv");
-	}
-
+	
+	
 	/**
 	 * Starts the server with argument (branchId).
 	 *
