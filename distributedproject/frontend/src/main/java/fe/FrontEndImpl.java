@@ -141,8 +141,7 @@ public class FrontEndImpl extends FrontEndPOA {
 				String customID = replyI.getHeader().customId;
 				correctResult += rI + ",";
 			}
-		}
-		if (getCount == false)
+		} else if (getCount == false)
 		for (int i = 0; i < messages.length; ++i) {
 			for (int j = 0; j < messages.length; ++j) {
 				if (i != j && messages[i] != null && messages[j] != null) {
@@ -187,12 +186,12 @@ public class FrontEndImpl extends FrontEndPOA {
 						correctResult = rJ;
 						failedRM = replyI.getHeader().originId;
 						BranchRequestBody body = new BranchRequestBody().notifyByzantineError(failedRM);
-						udp.send(body, "notifyByzantineError", replyI.getHeader().destinationId, FEID);
+						udp.send(body, "notifyByzantineError", resolveSequencerId(replyI.getHeader().destinationId), FEID);
 					} else if (rJ.equalsIgnoreCase(correctResult)) {
 						correctResult = rI;
 						failedRM = replyJ.getHeader().originId;
 						BranchRequestBody body = new BranchRequestBody().notifyByzantineError(failedRM);
-						udp.send(body, "notifyByzantineError", replyJ.getHeader().destinationId, FEID);
+						udp.send(body, "notifyByzantineError", resolveSequencerId(replyJ.getHeader().destinationId), FEID);
 					}
 					System.err.println("The error occured in RM: " + failedRM);
 				}
