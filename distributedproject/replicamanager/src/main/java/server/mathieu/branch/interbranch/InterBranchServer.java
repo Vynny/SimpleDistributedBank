@@ -87,56 +87,60 @@ public class InterBranchServer extends Thread {
 		return packet;
 	}
 
-	public void run() {
-		while (true) {
-			byte[] requestBuffer = new byte[MESSAGE_MAX_SIZE];
-			DatagramPacket request = new DatagramPacket(requestBuffer, requestBuffer.length);
-			try {
-				socket.receive(request);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			InterBranchPacket requestObject = decodeDatagramPacket(request);
-			if (requestObject == null) {
-				BranchImpl.logger.println("Received an invalid request Object");
-				continue;
-			}
-
-			if (requestObject.method.equalsIgnoreCase(MESSAGE_METHOD_NAME_TRANSFER)) {
-				Transaction transaction = branchServer.addTransferedFund(requestObject);
-				if (transaction == null) {
-					requestObject.method = MESSAGE_METHOD_ERROR;
-					requestObject.errMessage = "Could not find destination Account";
-					BranchImpl.logger.println("Transaction: " + requestObject.transactionId
-							+ ", Unable to transfer fund to non existant account: " + requestObject.clientId);
-				}
-				new Thread() {
-					public void run() {
-						DatagramPacket reply = buildDatagramPacket(request.getSocketAddress(), requestObject);
-						while (true) {
-							try {
-								DatagramSocket socket = new DatagramSocket();
-								socket.send(reply);
-							} catch (SocketException e) {
-								e.printStackTrace();
-								continue;
-							} catch (IOException e) {
-								e.printStackTrace();
-								continue;
-							}
-							if (transaction != null) {
-								transaction.commit();
-							}
-							break;
-						}
-					}
-				}.start();
-
-			} else if (requestObject.method.equalsIgnoreCase(MESSAGE_METHOD_TRANSFER_ACK)) {
-				// TODO remove transaction from map
-			}
-
-		}
-	}
+	// public void run() {
+	// while (true) {
+	// byte[] requestBuffer = new byte[MESSAGE_MAX_SIZE];
+	// DatagramPacket request = new DatagramPacket(requestBuffer,
+	// requestBuffer.length);
+	// try {
+	// socket.receive(request);
+	// } catch (IOException e) {
+	// e.printStackTrace();
+	// }
+	// InterBranchPacket requestObject = decodeDatagramPacket(request);
+	// if (requestObject == null) {
+	// BranchImpl.logger.println("Received an invalid request Object");
+	// continue;
+	// }
+	//
+	// if (requestObject.method.equalsIgnoreCase(MESSAGE_METHOD_NAME_TRANSFER)) {
+	// Transaction transaction = branchServer.addTransferedFund(requestObject);
+	// if (transaction == null) {
+	// requestObject.method = MESSAGE_METHOD_ERROR;
+	// requestObject.errMessage = "Could not find destination Account";
+	// BranchImpl.logger.println("Transaction: " + requestObject.transactionId
+	// + ", Unable to transfer fund to non existant account: " +
+	// requestObject.clientId);
+	// }
+	// new Thread() {
+	// public void run() {
+	// DatagramPacket reply = buildDatagramPacket(request.getSocketAddress(),
+	// requestObject);
+	// while (true) {
+	// try {
+	// DatagramSocket socket = new DatagramSocket();
+	// socket.send(reply);
+	// } catch (SocketException e) {
+	// e.printStackTrace();
+	// continue;
+	// } catch (IOException e) {
+	// e.printStackTrace();
+	// continue;
+	// }
+	// if (transaction != null) {
+	// transaction.commit();
+	// }
+	// break;
+	// }
+	// }
+	// }.start();
+	//
+	// } else if
+	// (requestObject.method.equalsIgnoreCase(MESSAGE_METHOD_TRANSFER_ACK)) {
+	// // TODO remove transaction from map
+	// }
+	//
+	// }
+	// }
 
 }
