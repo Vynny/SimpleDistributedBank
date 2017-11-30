@@ -31,6 +31,10 @@ public class BranchImpl {
 		if (logger == null) {
 			logger = new Logger(identifier + ".log", true);
 		}
+		
+		// Dummy account for tests
+		loadCustomerRecord(new CustomerRecord("Batman", "Wayne", "123 main street", "555-555-5555", 1000));
+		loadCustomerRecord(new CustomerRecord("Batman", "Wayne", "123 main street", "555-555-5555", 1001));
 	}
 
 	/**
