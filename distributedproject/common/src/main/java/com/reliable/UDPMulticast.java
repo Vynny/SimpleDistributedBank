@@ -222,7 +222,6 @@ public class UDPMulticast extends Thread {
 
     private void handleMissingMessageFromGroup(MessageHeader requestHeader) {
         // TODO If necessary, only if members other than sequencer need to multicast
-
     }
 
     private long getLastReceivedFrom(String senderId) {
