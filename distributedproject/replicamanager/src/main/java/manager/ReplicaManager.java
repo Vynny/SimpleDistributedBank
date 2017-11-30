@@ -15,6 +15,7 @@ import server.radu.RaduBranchImpl;
 import server.sylvain.SylvainBranchImpl;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.SocketException;
 import java.util.Map;
 
@@ -33,9 +34,22 @@ public class ReplicaManager {
     private ReliableUDP reliableUDP;
     private boolean isRunning = false;
 
-    //Errors
+    //Errors Handle
+    private int byzantineCount = 0;
     private boolean isByzantine = false;
     private boolean isCrash = false;
+
+    //Error Trigger
+    private boolean canFail = false;
+    private boolean shouldCrash = false;
+
+    /*
+     * TRIGGERING BYZANTINE
+     *   -Deposit 423 dollars into an account 3 times. Sylvain IMPL will byzantine.
+     *
+     * TRIGGERING CRASH
+     *   -Deposit 42 dollars into an account. Sylvain IMPL will crash.
+     */
 
     public ReplicaManager(int rmNumber, Branch branch, ServerImpl serverImpl) {
         this.rmNumber = rmNumber;
@@ -66,6 +80,7 @@ public class ReplicaManager {
                 this.branchServer = new RaduBranchImpl(branch.toString());
                 break;
             case SYLVAIN:
+                this.canFail = true;
                 this.branchServer = new SylvainBranchImpl(branch);
                 break;
             case MATHIEU:
@@ -116,7 +131,8 @@ public class ReplicaManager {
 
         //Send the reply
         try {
-            reliableUDP.reply(header, replyBody, "");
+            if (!shouldCrash)
+                reliableUDP.reply(header, replyBody, "");
         } catch (SocketException e) {
             e.printStackTrace();
         }
@@ -131,6 +147,10 @@ public class ReplicaManager {
         switch (branchRequestBody.getOperationType()) {
             case DEPOSIT:
                 replyText = branchServer.deposit(requestMap.get("customerId"), requestMap.get("amount"));
+
+                if (shouldCrash(requestMap.get("amount")))
+                    this.shouldCrash = true;
+
                 break;
             case WITHDRAW:
                 replyText = branchServer.withdraw(requestMap.get("customerId"), requestMap.get("amount"));
@@ -154,8 +174,11 @@ public class ReplicaManager {
                 break;
             case ERROR_BYZANTINE:
                 String byzantineRmId = requestMap.get("originID");
-                if (ErrorHelper.didIByzantine(rmId, byzantineRmId))
-                    handleByzantine(branchRequestBody);
+                if (ErrorHelper.didIByzantine(rmId, byzantineRmId)) {
+                    byzantineCount++;
+                    if (byzantineCount == 3)
+                        handleByzantine(branchRequestBody);
+                }
                 break;
             case ERROR_CRASH:
                 String crashRmId1 = requestMap.get("originID1");
@@ -187,6 +210,18 @@ public class ReplicaManager {
     private void handleCrash(BranchRequestBody branchRequestBody) {
         System.out.println("Notified of a crash failure! " + replicaName());
         isCrash = true;
+    }
+
+    /*
+     * --------------
+     * Error Triggers
+     * --------------
+     */
+
+    public boolean shouldCrash(String amount) {
+        if (new BigDecimal(amount).compareTo(new BigDecimal("42")) == 0)
+            return true;
+        return false;
     }
 
     /*
