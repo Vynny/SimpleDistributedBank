@@ -18,6 +18,7 @@ public class FrontEndImpl extends FrontEndPOA {
 	private Message messages[];
 	private String FEID;
 	private String finalResult;
+	private String branch;
 	public void setORB(ORB orb_val) {
 		orb = orb_val;
 	}
@@ -59,7 +60,7 @@ public class FrontEndImpl extends FrontEndPOA {
 				//if (customID.equalsIgnoreCase(FEID)) {
 					receivedFirstReply = true;
 					// just to check that this is indeed the first and only reply
-					for (int i = 1; i < messages.length; ++i) {
+					for (int i = 0; i < messages.length; ++i) {
 						if (messages[i] != null)
 							receivedFirstReply = false;
 					}
@@ -103,7 +104,7 @@ public class FrontEndImpl extends FrontEndPOA {
 	//	organizeReplies();
 	}
 	private void startHandlingPotentialRMCrash() {
-		
+		System.out.println("Started watching out for potential RM crashes");
 		Timer timer = new Timer();
 		timer.schedule(new TimerTask() {
 			  @Override
@@ -116,7 +117,7 @@ public class FrontEndImpl extends FrontEndPOA {
 							  messages[0].getHeader().originId,
 							  messages[1].getHeader().originId);
 					  try {
-						  udp.send(body, "notifyCrashError",resolveSequencerId(messages[0].getHeader().destinationId), FEID);
+						  udp.send(body, "notifyCrashError","SEQ"+branch, FEID);
 						  finalResult = handleReplies(false);
 					  }
 					  catch(Exception e) {
@@ -168,8 +169,9 @@ public class FrontEndImpl extends FrontEndPOA {
 
 				}
 			}
-
 		}
+		
+		boolean foundIt = false;
 		if (problemDetected)
 			for (int i = 0; i < messages.length; ++i) {
 				for (int j = 0; j < messages.length; ++j) {
@@ -181,20 +183,26 @@ public class FrontEndImpl extends FrontEndPOA {
 					String rI = bodyI.getReply();
 					String rJ = bodyJ.getReply();
 					String failedRM = "";
-
+					System.out.println("SEQ + branch is: SEQ" + branch);
 					if (rI.equalsIgnoreCase(correctResult)) {
 						correctResult = rJ;
 						failedRM = replyI.getHeader().originId;
 						BranchRequestBody body = new BranchRequestBody().notifyByzantineError(failedRM);
-						udp.send(body, "notifyByzantineError", resolveSequencerId(replyI.getHeader().destinationId), FEID);
+						udp.send(body, "notifyByzantineError", "SEQ"+branch, FEID);
+						foundIt = true;
 					} else if (rJ.equalsIgnoreCase(correctResult)) {
 						correctResult = rI;
 						failedRM = replyJ.getHeader().originId;
 						BranchRequestBody body = new BranchRequestBody().notifyByzantineError(failedRM);
-						udp.send(body, "notifyByzantineError", resolveSequencerId(replyJ.getHeader().destinationId), FEID);
+						udp.send(body, "notifyByzantineError","SEQ"+branch, FEID);
+						foundIt = true;
 					}
 					System.err.println("The error occured in RM: " + failedRM);
+					if (foundIt)
+						break;
 				}
+				if (foundIt)
+					break;
 		}
 
 		for (int i = 0; i < messages.length; ++i)
@@ -208,6 +216,7 @@ public class FrontEndImpl extends FrontEndPOA {
 	}
 	public String createAccountRecord(String managerID, String firstName, String lastName, String address
 			   , String phone, String branch) {
+		branch = managerID.substring(0, 2);
 		success = false;
 		try {
 			BranchRequestBody body = new BranchRequestBody().createAccountRecord(managerID, firstName,
@@ -228,6 +237,7 @@ public class FrontEndImpl extends FrontEndPOA {
 	}
 	public String editRecord(String managerID, String customerID, String fieldName, String newValue) {
 		success = false;
+		branch = customerID.substring(0, 2);
 		try {
 			BranchRequestBody body = new BranchRequestBody().editRecord(managerID, customerID, fieldName, newValue);
 			udp.send(body, "editRecord", resolveSequencerId(customerID), FEID);
@@ -247,6 +257,7 @@ public class FrontEndImpl extends FrontEndPOA {
 	}
 	public String getAccountCount(String managerID) {
 		success = false;
+		branch = managerID.substring(0, 2);
 		try {
 			BranchRequestBody body = new BranchRequestBody().getAccountCount(managerID);
 			udp.send(body, "getAccountCount", resolveSequencerId(managerID), FEID);
@@ -278,6 +289,7 @@ public class FrontEndImpl extends FrontEndPOA {
 
 	public String transferFundManager (String managerID,String amount, String sourceCustomerID,String destinationCustomerID) {
 		success = false;
+		branch = sourceCustomerID.substring(0, 2);
 		String retMessage = "sorry bro, but this aint gon work till the rest of the project is up";
 		return retMessage;
 	}
@@ -287,11 +299,13 @@ public class FrontEndImpl extends FrontEndPOA {
 
 	public String transferFund(String sourceCustomerID,String amount,String destinationCustomerID) {
 		success = false;
+		branch = sourceCustomerID.substring(0, 2);
 		String retMessage = "sorry bro, but this aint gon work till the rest of the project is up";
 		return retMessage;
 	}
 	public String deposit(String customerID,String amount) {
 		success = false;
+		branch = customerID.substring(0, 2);
 		try {
 			BranchRequestBody body = new BranchRequestBody().deposit(customerID, amount);
 			udp.send(body, "deposit", resolveSequencerId(customerID), FEID);
@@ -312,6 +326,7 @@ public class FrontEndImpl extends FrontEndPOA {
 	}
 	public String withdraw(String customerID, String amount) {
 		success = false;
+		branch = customerID.substring(0, 2);
 		try {
 			BranchRequestBody body = new BranchRequestBody().withdraw(customerID, amount);
 			udp.send(body, "withdraw", resolveSequencerId(customerID), FEID);
@@ -331,6 +346,7 @@ public class FrontEndImpl extends FrontEndPOA {
 	}
 	public String getBalance(String customerID) {
 		success = false;
+		branch = customerID.substring(0, 2);
 		try {
 			BranchRequestBody body = new BranchRequestBody().getBalance(customerID);
 			System.out.println("SENDING");
@@ -354,6 +370,7 @@ public class FrontEndImpl extends FrontEndPOA {
 		receivedAllResults = false;
 	}
 	private String resolveSequencerId(String bankUserId) {
+		
 		return "SEQ" + bankUserId.substring(0, 2);
 	}
 
