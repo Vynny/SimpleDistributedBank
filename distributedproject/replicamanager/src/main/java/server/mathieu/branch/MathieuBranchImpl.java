@@ -4,10 +4,10 @@ import java.math.BigDecimal;
 
 import server.BranchServer;
 
-public class BranchAdapter implements BranchServer {
+public class MathieuBranchImpl implements BranchServer {
 	BranchImpl branchServer;
 
-	public BranchAdapter(String identifier) {
+	public MathieuBranchImpl(String identifier) {
 		this.branchServer = new BranchImpl(identifier);
 	}
 
@@ -83,6 +83,12 @@ public class BranchAdapter implements BranchServer {
 		}
 
 		return String.format("Account Balance for Customer %s: $%.2f", customerId, balance);
+	}
+
+	@Override
+	public String getAccountCount() {
+		//TODO: Return acccount counts
+		return null;
 	}
 
 }

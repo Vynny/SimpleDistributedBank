@@ -162,4 +162,9 @@ public class SylvainBranchImpl implements BranchServer {
 
         return response;
     }
+
+    @Override
+    public String getAccountCount() {
+        return thisBranch.toString() + ": " + this.customerDatabase.getCustomerCount();
+    }
 }

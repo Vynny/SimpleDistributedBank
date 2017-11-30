@@ -387,4 +387,10 @@ public class RaduBranchImpl implements BranchServer {
             return "Could not find customer with id " + customerID;
         }
     }
+
+    @Override
+    public String getAccountCount() {
+        //TODO: get account count
+        return null;
+    }
 }
