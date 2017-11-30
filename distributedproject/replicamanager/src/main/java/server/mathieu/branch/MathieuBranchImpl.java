@@ -87,8 +87,7 @@ public class MathieuBranchImpl implements BranchServer {
 
 	@Override
 	public String getAccountCount() {
-		//TODO: Return acccount counts
-		return null;
+		return branchServer.ID + ": " + branchServer.getAccountCount();
 	}
 
 }
