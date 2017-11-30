@@ -172,6 +172,9 @@ public class ReplicaManager {
                         requestMap.get("fieldName"),
                         requestMap.get("newValue"));
                 break;
+            case GET_ACCOUNT_COUNT:
+                replyText = branchServer.getAccountCount();
+                break;
             case ERROR_BYZANTINE:
                 String byzantineRmId = requestMap.get("originID");
                 if (ErrorHelper.didIByzantine(rmId, byzantineRmId)) {
