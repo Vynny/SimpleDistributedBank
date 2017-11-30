@@ -22,6 +22,7 @@ public class FrontEndImpl extends FrontEndPOA {
 	}
 	public void setAttribs(ORB orb_val, String FEID) {
 		this.FEID = FEID;
+		finalResult = null;
 		try {
 			udp = new ReliableUDP();
 			messages = new Message[3];
@@ -72,7 +73,9 @@ public class FrontEndImpl extends FrontEndPOA {
 				// we received all the replies, we can now handle the 3 messages to produce one correct reply for the client
 				try {
 					receivedAllResults = true;
+					System.out.println("trying to handle all replies now");
 					finalResult = handleReplies();
+					System.out.println("final result should be: " + finalResult);
 
 				}
 				catch (Exception e) {
@@ -123,10 +126,12 @@ public class FrontEndImpl extends FrontEndPOA {
 					String rJ = bodyJ.getReply();
 						if (rI.equalsIgnoreCase(rJ)) {
 							// then the results are the same
+							
 							correctResult = rI;
+							System.out.println("correct result1:" + correctResult);
 						} else if (!problemDetected){
 							// we got a problem
-							System.err.println("OMG detected a byzantine error, standy by please we got this.");
+							System.out.println("OMG detected a byzantine error, standy by please we got this.");
 							problemDetected = true;
 							failedIndexes[0] = i;
 							failedIndexes[1] = j;
@@ -166,7 +171,9 @@ public class FrontEndImpl extends FrontEndPOA {
 		for (int i = 0; i < messages.length; ++i)
 			messages[i] = null;
 		int newFEID = Integer.parseInt(FEID);
+		newFEID++;
 		FEID = String.valueOf(newFEID);
+		System.out.println("correct result:" + correctResult);
 		return correctResult;
 	}
 	public String createAccountRecord(String managerID, String firstName, String lastName, String address
@@ -226,14 +233,16 @@ public class FrontEndImpl extends FrontEndPOA {
 		try {
 			BranchRequestBody body = new BranchRequestBody().deposit(customerID, amount);
 			udp.send(body, "deposit", resolveSequencerId(customerID), FEID);
+			System.out.println("Sent a request to the sequencer for a deposit.");
 		}
 		catch(Exception e) {
 			System.out.println("Problem connecting through udp to sequencer from FE");
 	}
 		String retMessage = "";
-
+		
 		while (finalResult == null) {
 			// wait for the system to compute the result
+			System.out.println("waiting...");
 		}
 		retMessage = finalResult;
 		finalResult = null;
@@ -251,6 +260,7 @@ public class FrontEndImpl extends FrontEndPOA {
 
 		while (finalResult == null) {
 			// wait for the system to compute the result
+			System.out.println("waiting...");
 		}
 		retMessage = finalResult;
 		finalResult = null;
@@ -265,9 +275,9 @@ public class FrontEndImpl extends FrontEndPOA {
 			System.out.println("Problem connecting through udp to sequencer from FE");
 		}
 		String retMessage = "";
-
 		while (finalResult == null) {
 			// wait for the system to compute the result
+			System.out.println("waiting...");
 		}
 		retMessage = finalResult;
 		finalResult = null;
