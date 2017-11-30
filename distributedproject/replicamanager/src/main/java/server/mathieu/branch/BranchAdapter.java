@@ -49,25 +49,40 @@ public class BranchAdapter implements BranchServer {
 	@Override
 	public String deposit(String customerId, String amount) {
 		double depositAmount = new BigDecimal(amount).doubleValue();
+		double newBalance = Double.NaN;
 		try {
-			double newBalance = branchServer.deposit(customerId, depositAmount);
+			newBalance = branchServer.deposit(customerId, depositAmount);
 		} catch (BranchException e) {
+			return e.getMessage();
 		}
-		
-		// TODO method stub
-		return null;
+
+		return String.format("Deposited $%s into your account (%s). New Balance: $%.2f", amount, customerId,
+				newBalance);
 	}
 
 	@Override
 	public String withdraw(String customerId, String amount) {
-		// TODO Auto-generated method stub
-		return null;
+		double withdrawAmount = new BigDecimal(amount).doubleValue();
+		double newBalance = Double.NaN;
+		try {
+			newBalance = branchServer.withdraw(customerId, withdrawAmount);
+		} catch (BranchException e) {
+			return e.getMessage();
+		}
+
+		return String.format("Withdrew $%s into your account (%s). New Balance: $%.2f", amount, customerId, newBalance);
 	}
 
 	@Override
 	public String getBalance(String customerId) {
-		// TODO Auto-generated method stub
-		return null;
+		double balance = Double.NaN;
+		try {
+			balance = branchServer.getBalance(customerId);
+		} catch (BranchException e) {
+			return e.getMessage();
+		}
+
+		return String.format("Account Balance for Customer %s: $%.2f", customerId, balance);
 	}
 
 }

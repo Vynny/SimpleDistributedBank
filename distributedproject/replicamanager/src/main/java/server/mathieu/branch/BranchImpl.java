@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
-
 public class BranchImpl {
 	public static final String DBS_SERVICE_NAME = "DBS_Service";
 	public static Logger logger;
@@ -77,12 +76,19 @@ public class BranchImpl {
 
 	public double deposit(String customerId, double amount) {
 		CustomerRecord record = getCustomerRecord(customerId);
+		if (record == null) {
+			throw new BranchException("Could not find customer with id " + customerId);
+		}
+
 		double total = record.deposit(amount);
 		return total;
 	}
 
 	public double withdraw(String customerId, double amount) {
 		CustomerRecord record = getCustomerRecord(customerId);
+		if (record == null) {
+			throw new BranchException("Could not find customer with id " + customerId);
+		}
 
 		double total = record.withdraw(amount);
 		return total;
@@ -94,38 +100,42 @@ public class BranchImpl {
 		return record.getAccountTotal();
 	}
 
-//	public double transferFund(String sourceCustomerId, double amount, String destinationCustomerId) {
-//		CustomerRecord sourceRecord = getCustomerRecord(sourceCustomerId);
-//		if (sourceRecord == null) {
-//			logger.println("TransferFund request for source " + sourceCustomerId
-//					+ " cannot be completed, source does not exist");
-//			throw new BranchException("Invalid source id");
-//		}
-//		BranchLocation destination;
-//		try {
-//			destination = dbsService.getBranchLocation(destinationCustomerId);
-//		} catch (ServiceException e) {
-//			String errorMessage = "Unable to retrieve the branch location for destination id: " + destinationCustomerId;
-//			logger.println(errorMessage);
-//			throw new BranchException(errorMessage);
-//		}
-//
-//		transactionManager.createTransferTransaction(sourceRecord, destination, destinationCustomerId, amount);
-//		return Double.NaN;
-//	}
+	// public double transferFund(String sourceCustomerId, double amount, String
+	// destinationCustomerId) {
+	// CustomerRecord sourceRecord = getCustomerRecord(sourceCustomerId);
+	// if (sourceRecord == null) {
+	// logger.println("TransferFund request for source " + sourceCustomerId
+	// + " cannot be completed, source does not exist");
+	// throw new BranchException("Invalid source id");
+	// }
+	// BranchLocation destination;
+	// try {
+	// destination = dbsService.getBranchLocation(destinationCustomerId);
+	// } catch (ServiceException e) {
+	// String errorMessage = "Unable to retrieve the branch location for destination
+	// id: " + destinationCustomerId;
+	// logger.println(errorMessage);
+	// throw new BranchException(errorMessage);
+	// }
+	//
+	// transactionManager.createTransferTransaction(sourceRecord, destination,
+	// destinationCustomerId, amount);
+	// return Double.NaN;
+	// }
 
-//	public Transaction addTransferedFund(InterBranchPacket packet) {
-//		CustomerRecord record = getCustomerRecord(packet.clientId);
-//		if (record == null) {
-//			return null;
-//		}
-//		Transaction transaction = transactionManager.receiveTransferTransaction(packet, record);
-//		return transaction;
-//	}
+	// public Transaction addTransferedFund(InterBranchPacket packet) {
+	// CustomerRecord record = getCustomerRecord(packet.clientId);
+	// if (record == null) {
+	// return null;
+	// }
+	// Transaction transaction =
+	// transactionManager.receiveTransferTransaction(packet, record);
+	// return transaction;
+	// }
 
 	private void validateCustomerId(String customerId) {
 		if (customerId == null || !customerId.substring(0, 3).equalsIgnoreCase(ID + "C") || customerId.length() != 7) {
-			throw new BranchException("Invalid customerId");
+			throw new BranchException("Could not find customer with id " + customerId);
 		}
 	}
 

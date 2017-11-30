@@ -25,8 +25,8 @@ public class Account {
 	 * @return The new account total after the transaction.
 	 */
 	synchronized double deposit(double amount) {
-		if (amount < 0) {
-			throw new IllegalArgumentException("Amount must be a non-negative number");
+		if (amount <= 0) {
+			throw new BranchException("Cannot deposit a negative amount or $0.");
 		}
 		total += amount;
 		BranchImpl.logger
@@ -42,10 +42,13 @@ public class Account {
 	 * @return The new account total after the transaction.
 	 */
 	synchronized double withdraw(double amount) {
-		if (amount < 0) {
-			throw new IllegalArgumentException("Amount must be a non-negative number");
+		if (amount <= 0) {
+			throw new BranchException("Cannot withdraw a negative amount or $0.");
 		}
-
+		if (total - amount < 0) {
+			throw new BranchException(String
+					.format("You do not have enough funds to withdraw $%.2f. Your balance is $%.2f", amount, total));
+		}
 		total -= amount;
 		BranchImpl.logger
 				.println("Withdraw from " + accountNumber + " for an amount of " + amount + " new total is " + total);
