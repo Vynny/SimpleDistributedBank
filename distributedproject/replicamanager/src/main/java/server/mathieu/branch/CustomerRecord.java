@@ -1,89 +1,94 @@
 package server.mathieu.branch;
 
 public class CustomerRecord {
-	private CustomerDetails details;
-	private Account account;
+    private CustomerDetails details;
+    private Account account;
 
-	public CustomerRecord(String firstName, String lastName, String address, String phone, int accountNumber) {
-		details = new CustomerDetails(firstName, lastName, address, phone);
-		account = new Account(accountNumber);
-	}
+    public CustomerRecord(String firstName, String lastName, String address, String phone, int accountNumber) {
+        this(firstName, lastName, address, phone, accountNumber, 0);
+    }
 
-	/**
-	 * Deposits the given amount into the account.
-	 * 
-	 * @param amount
-	 *            The amount to deposit
-	 * @return The new account total after the transaction.
-	 */
-	public double deposit(double amount) {
-		return account.deposit(amount);
-	}
+    public CustomerRecord(String firstName, String lastName, String address, String phone, int accountNumber,
+            double amount) {
+        details = new CustomerDetails(firstName, lastName, address, phone);
+        account = new Account(accountNumber, amount);
+    }
 
-	/**
-	 * Withdraws the given amount from the account.
-	 * 
-	 * @param amount
-	 *            The amount to withdraw
-	 * @return The new account total after the transaction.
-	 */
-	public double withdraw(double amount) {
-		return account.withdraw(amount);
-	}
+    /**
+     * Deposits the given amount into the account.
+     * 
+     * @param amount
+     *            The amount to deposit
+     * @return The new account total after the transaction.
+     */
+    public double deposit(double amount) {
+        return account.deposit(amount);
+    }
 
-	public String getFirstName() {
-		return details.getFirstName();
-	}
+    /**
+     * Withdraws the given amount from the account.
+     * 
+     * @param amount
+     *            The amount to withdraw
+     * @return The new account total after the transaction.
+     */
+    public double withdraw(double amount) {
+        return account.withdraw(amount);
+    }
 
-	public void setFirstName(String firstName) {
-		this.details.setFirstName(firstName);
-	}
+    public String getFirstName() {
+        return details.getFirstName();
+    }
 
-	public String getLastName() {
-		return details.getLastName();
-	}
+    public void setFirstName(String firstName) {
+        this.details.setFirstName(firstName);
+    }
 
-	public void setLastName(String lastName) {
-		this.details.setLastName(lastName);
-	}
+    public String getLastName() {
+        return details.getLastName();
+    }
 
-	public String getAddress() {
-		return details.getAddress();
-	}
+    public void setLastName(String lastName) {
+        this.details.setLastName(lastName);
+    }
 
-	public void setAddress(String address) {
-		this.details.setAddress(address);
-	}
+    public String getAddress() {
+        return details.getAddress();
+    }
 
-	public String getPhone() {
-		return details.getPhone();
-	}
+    public void setAddress(String address) {
+        this.details.setAddress(address);
+    }
 
-	public void setPhone(String phone) {
-		this.details.setPhone(phone);
-	}
+    public String getPhone() {
+        return details.getPhone();
+    }
 
-	public int getAccountNumber() {
-		return account.getAccountNumber();
-	}
+    public void setPhone(String phone) {
+        this.details.setPhone(phone);
+    }
 
-	public void setAccountNumber(int accountNumber) {
-		account.setAccountNumber(accountNumber);
-	}
+    public int getAccountNumber() {
+        return account.getAccountNumber();
+    }
 
-	public double getAccountTotal() {
-		return account.getAccountTotal();
-	}
+    public void setAccountNumber(int accountNumber) {
+        account.setAccountNumber(accountNumber);
+    }
 
-	/**
-	 * Returns the record as a String.
-	 * 
-	 * @return entry as format firstName;lastName;address;phone;
-	 *         accountNumber;accountTotal
-	 */
-	@Override
-	public String toString() {
-		return getFirstName() + ";" + getLastName() + ";" + getAddress() + ";" + getPhone() + ";" + getAccountNumber()
-				+ ";" + getAccountTotal();
-	}
+    public double getAccountTotal() {
+        return account.getAccountTotal();
+    }
+
+    /**
+     * Returns the record as a String.
+     * 
+     * @return entry as format firstName;lastName;address;phone;
+     *         accountNumber;accountTotal
+     */
+    @Override
+    public String toString() {
+        return getFirstName() + ";" + getLastName() + ";" + getAddress() + ";" + getPhone() + ";" + getAccountNumber()
+                + ";" + getAccountTotal();
+    }
 }
