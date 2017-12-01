@@ -17,10 +17,12 @@ import java.util.Random;
 public class RaduBranchImpl implements BranchServer {
     ServerDatabase ser;
     private int port;
+    private int accIncr;
     NumberFormat formatter;
 
     public RaduBranchImpl(String branch) {
         ser = new ServerDatabase(branch);
+        accIncr = 1;
         formatter = NumberFormat.getCurrencyInstance();
     }
 
@@ -48,9 +50,10 @@ public class RaduBranchImpl implements BranchServer {
         }
         List<String> s = new ArrayList<String>();
         String ID = branch + "C";
-        Random rand = new Random();
-        // note: there is a very small chance that the number is not unique. That chance is 1/40000
-        // but I'm not going to handle the uniqueness of a number since this assignment is not about that.
+        int d = 1001 + accIncr;
+        ++accIncr;
+        ID += Integer.toString(d);
+        /*Random rand = new Random();
         int digit1 = rand.nextInt(10);
         int digit2 = rand.nextInt(10);
         int digit3 = rand.nextInt(10);
@@ -59,7 +62,7 @@ public class RaduBranchImpl implements BranchServer {
         String s2 = Integer.toString(digit2);
         String s3 = Integer.toString(digit3);
         String s4 = Integer.toString(digit4);
-        ID += s1 + s2 + s3 + s4;
+        ID += s1 + s2 + s3 + s4;*/
         String balance = "0";
         s.add(ID);
         s.add(balance);
