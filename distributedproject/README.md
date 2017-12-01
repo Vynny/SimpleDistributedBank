@@ -4,25 +4,25 @@ Instructions
 Running Included Binaries
 -
 
-###Run ORB Daemon
+### Run ORB Daemon
 1) Open a console window
 2) Run the command
 - **Unix**: orbd -ORBInitialPort 1050 -ORBInitialHost 127.0.0.1
 - **Windows**: start orbd -ORBInitialPort 1050 -ORBInitialHost 127.0.0.1
 
 
-###Start FrontEnd
+### Start FrontEnd
 3) From server/
 4) Run 'java -jar target/frontend-1.0.jar
 
 
-###Start Sequencer
+### Start Sequencer
 5) From sequencer/
 6) Run 'java -jar target/sequencer-1.0.jar <branch>'
     -branch: QC, MB, NB, BC
 
 
-###Start ReplicaManager
+### Start ReplicaManager
 7) From replicamanager/
 8) Run 'java -jar target/replicamanager-1.0.jar \<implementation> \<branch> \<id>'
 - **implementation**: RA (Radu), SY (Sylvain), MA (Mathieu)
@@ -30,19 +30,19 @@ Running Included Binaries
 - **id**: 1, 2, 3 (do not start duplicates)
 
 
-###Start Client(s)
-####CustomerClient
+### Start Client(s)
+#### CustomerClient
 9) From customerclient/
 10) Run 'java -jar target/customerclient-1.0.jar'
 
-####ManagerClient
+#### ManagerClient
 11) From managerclient/
 12) Run 'java -jar target/managerclient-1.0.jar'
 
 
 Running Entire System
 -
-###Full Start
+### Full Start
 A full start requires:
 
 - 12 ReplicaManagers (3/branch, one each of SY, RA, MA)
@@ -52,9 +52,9 @@ A full start requires:
 
 To start all the required binaries at once, run **startall.bat**.
 
-###Triggering Errors
-####Byzantine
+### Triggering Errors
+#### Byzantine
 Deposit $423 into an account 3 times. Sylvain IMPL will byzantine.
 
-####Crash
+#### Crash
 Deposit $42 into an account. Sylvain IMPL will crash.
