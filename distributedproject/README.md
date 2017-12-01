@@ -16,7 +16,7 @@ Running Included Binaries
 ### Start Sequencer
 5) From sequencer/
 6) Run 'java -jar target/sequencer-1.0.jar <branch>'
-    -branch: QC, MB, NB, BC
+- **branch**: QC, MB, NB, BC
 
 
 ### Start ReplicaManager
