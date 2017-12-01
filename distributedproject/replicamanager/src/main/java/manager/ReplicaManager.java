@@ -37,20 +37,12 @@ public class ReplicaManager {
 
     //Errors Handle
     private final static int BYZANTINE_MAX = 3;
-    private int byzantineCount = 0;
+    private int byzantineCount;
     private boolean didFail = false;
 
     //Error Trigger
     private boolean canFail;
     private boolean shouldCrash;
-
-    /*
-     * TRIGGERING BYZANTINE
-     *   -Deposit 423 dollars into an account 3 times. Sylvain IMPL will byzantine.
-     *
-     * TRIGGERING CRASH
-     *   -Deposit 42 dollars into an account. Sylvain IMPL will crash.
-     */
 
     public ReplicaManager(int rmNumber, Branch branch, ServerImpl serverImpl) {
         this.rmNumber = rmNumber;
@@ -76,8 +68,11 @@ public class ReplicaManager {
 
     //Start the manager
     private void startBranchServer() {
+
         this.canFail = false;
         this.shouldCrash = false;
+        this.byzantineCount = 0;
+
         switch (serverImpl) {
             case RADU:
                 this.branchServer = new RaduBranchImpl(branch.toString());
