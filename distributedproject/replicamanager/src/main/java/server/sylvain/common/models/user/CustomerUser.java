@@ -1,7 +1,7 @@
 package server.sylvain.common.models.user;
 
 
-import server.Branch;
+import enums.Branch;
 import server.sylvain.common.models.account.BankAccount;
 
 import java.io.Serializable;

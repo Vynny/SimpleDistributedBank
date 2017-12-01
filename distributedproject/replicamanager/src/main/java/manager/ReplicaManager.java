@@ -8,7 +8,7 @@ import manager.helpers.NameHelper;
 import manager.replicas.ServerImpl;
 import messages.branch.BranchReplyBody;
 import messages.branch.BranchRequestBody;
-import server.Branch;
+import enums.Branch;
 import server.BranchServer;
 import server.mathieu.branch.MathieuBranchImpl;
 import server.radu.RaduBranchImpl;

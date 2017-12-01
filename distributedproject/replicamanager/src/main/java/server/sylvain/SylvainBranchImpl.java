@@ -1,7 +1,7 @@
 package server.sylvain;
 
 
-import server.Branch;
+import enums.Branch;
 import server.BranchServer;
 import logging.BankLogger;
 import server.sylvain.common.models.account.BankAccount;

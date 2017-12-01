@@ -1,6 +1,6 @@
 package manager.helpers;
 
-import server.Branch;
+import enums.Branch;
 
 public class NameHelper {
 

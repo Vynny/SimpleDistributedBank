@@ -1,5 +1,5 @@
 import manager.ReplicaManager;
-import server.Branch;
+import enums.Branch;
 import manager.replicas.ServerImpl;
 
 public class Main {

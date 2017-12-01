@@ -1,6 +1,6 @@
 package server.sylvain.common.models.user;
 
-import server.Branch;
+import enums.Branch;
 
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;

@@ -2,6 +2,7 @@ package fe;
 
 import com.message.Message;
 import com.reliable.ReliableUDP;
+import enums.Branch;
 import fe.corba.FrontEndPOA;
 import messages.branch.BranchReplyBody;
 import messages.branch.BranchRequestBody;
@@ -278,18 +279,10 @@ public class FrontEndImpl extends FrontEndPOA {
         branch = managerID.substring(0, 2);
         try {
             BranchRequestBody body = new BranchRequestBody().getAccountCount(managerID);
-            udp.send(body, "getAccountCount", "SEQQC", FEID);
-            int feid = Integer.valueOf(FEID);
-            feid++;
-            String newFEID = String.valueOf(feid);
-            udp.send(body, "getAccountCount", "SEQMB", newFEID);
-            feid++;
-            newFEID = String.valueOf(feid);
-            udp.send(body, "getAccountCount", "SEQNB", newFEID);
-            feid++;
-            newFEID = String.valueOf(feid);
-            udp.send(body, "getAccountCount", "SEQBC", newFEID);
-            System.out.println("Sent a multicast to the sequencer for getAccountCount.");
+            for (Branch branch : Branch.values()) {
+                udp.send(body, "getAccountCount", "SEQ" + branch.toString(), FEID);
+            }
+            System.out.println("Sent messages to sequencer for getAccountCount.");
         } catch (Exception e) {
             System.out.println("Problem connecting through udp to sequencer from FE");
         }
@@ -305,10 +298,8 @@ public class FrontEndImpl extends FrontEndPOA {
     }
 
     public String transferFundManager(String managerID, String amount, String sourceCustomerID, String destinationCustomerID) {
-        success = false;
-        branch = sourceCustomerID.substring(0, 2);
-        String retMessage = "sorry bro, but this aint gon work till the rest of the project is up";
-        return retMessage;
+        //Unused
+        return null;
     }
 
     public String transferFund(String sourceCustomerID, String amount, String destinationCustomerID) {

@@ -1,7 +1,7 @@
 package server.sylvain.server.udp;
 
 
-import server.Branch;
+import enums.Branch;
 import logging.BankLogger;
 import server.sylvain.common.models.user.CustomerUser;
 import server.sylvain.common.models.user.ManagerUser;
