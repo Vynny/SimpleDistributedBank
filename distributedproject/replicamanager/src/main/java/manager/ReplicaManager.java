@@ -36,6 +36,7 @@ public class ReplicaManager {
     private boolean isRunning = false;
 
     //Errors Handle
+    private final static int BYZANTINE_MAX = 3;
     private int byzantineCount = 0;
     private boolean didFail = false;
 
@@ -158,6 +159,9 @@ public class ReplicaManager {
                 System.out.println("\nRestoring server database!");
                 this.branchServer.restoreDatabase(databaseDump);
 
+                System.out.println("QCC1000 Balance: " + this.branchServer.getBalance("QCC1000"));
+                System.out.println("QCC1001 Balance: " + this.branchServer.getBalance("QCC1001"));
+
                 resetErrorFlags();
             } catch (ClassCastException e) {
                 System.out.println("Message does not contain a db dump. " + replicaName());
@@ -208,15 +212,16 @@ public class ReplicaManager {
                 String byzantineRmId = requestMap.get("originID");
                 if (ErrorHelper.didIByzantine(rmId, byzantineRmId)) {
                     byzantineCount++;
-                    if (byzantineCount == 3)
-                        handleRestart();
+                    System.out.println("Byzantine error detected. Count: " + byzantineCount + ", Max: " + BYZANTINE_MAX);
+                    if (byzantineCount == BYZANTINE_MAX)
+                        triggerRestart();
                 }
                 break;
             case ERROR_CRASH:
                 String crashRmId1 = requestMap.get("originID1");
                 String crashRmId2 = requestMap.get("originID2");
                 if (ErrorHelper.didICrash(rmNumber, crashRmId1, crashRmId2))
-                    handleRestart();
+                    triggerRestart();
                 break;
             case REQUEST_DB_DUMP:
                 if (serverImpl == ServerImpl.MATHIEU)
@@ -238,7 +243,7 @@ public class ReplicaManager {
      * --------------
      */
 
-    private void handleRestart() {
+    private void triggerRestart() {
         System.out.println("Notified of a byzantine or crash failure! " + replicaName());
         didFail = true;
 
