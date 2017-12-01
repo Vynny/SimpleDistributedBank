@@ -7,236 +7,235 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class BranchImpl {
-	public static final String DBS_SERVICE_NAME = "DBS_Service";
-	public static Logger logger;
+    public static final String DBS_SERVICE_NAME = "DBS_Service";
+    public static Logger logger;
 
-	public final String ID;
+    public final String ID;
 
-	/**
-	 * Database of account Number to customerRecord
-	 */
-	private Map<Integer, CustomerRecord> customerRecordMap;
+    /**
+     * Database of account Number to customerRecord
+     */
+    private Map<Integer, CustomerRecord> customerRecordMap;
 
-	/**
-	 * Manager map of ManagerId to BranchId
-	 */
-	private Map<String, String> managerMap;
+    /**
+     * Manager map of ManagerId to BranchId
+     */
+    private Map<String, String> managerMap;
 
-	public BranchImpl(String identifier) {
-		if (identifier == null) {
-			throw new IllegalArgumentException("The Branch identifier cannot be null");
-		}
-		this.customerRecordMap = new ConcurrentHashMap<>();
-		this.managerMap = new ConcurrentHashMap<>();
-		this.ID = identifier;
+    public BranchImpl(String identifier) {
+        if (identifier == null) {
+            throw new IllegalArgumentException("The Branch identifier cannot be null");
+        }
+        this.customerRecordMap = new ConcurrentHashMap<>();
+        this.managerMap = new ConcurrentHashMap<>();
+        this.ID = identifier;
 
-		if (logger == null) {
-			logger = new Logger(identifier + ".log", true);
-		}
-		
-		// Dummy account for tests
-		loadCustomerRecord(new CustomerRecord("Batman", "Wayne", "123 main street", "555-555-5555", 1000));
-		loadCustomerRecord(new CustomerRecord("Batman", "Wayne", "123 main street", "555-555-5555", 1001));
-	}
+        if (logger == null) {
+            logger = new Logger(identifier + ".log", true);
+        }
 
-	/**
-	 * Retrieves and returns a customer from this branch database.
-	 *
-	 * @param accountNumber
-	 *            The account number associated with the customer.
-	 * @return The Customer found or null otherwise
-	 */
-	public CustomerRecord getCustomerRecord(String customerId) {
-		validateCustomerId(customerId);
+        // Dummy account for tests
+        loadCustomerRecord(new CustomerRecord("Batman", "Wayne", "123 main street", "555-555-5555", 1000));
+        loadCustomerRecord(new CustomerRecord("Batman", "Wayne", "123 main street", "555-555-5555", 1001));
+    }
 
-		int accountNumber = parseAccountNumber(customerId);
-		CustomerRecord record = customerRecordMap.get(accountNumber);
+    /**
+     * Retrieves and returns a customer from this branch database.
+     *
+     * @param accountNumber
+     *            The account number associated with the customer.
+     * @return The Customer found or null otherwise
+     */
+    public CustomerRecord getCustomerRecord(String customerId) {
+        validateCustomerId(customerId);
 
-		return record;
-	}
+        int accountNumber = parseAccountNumber(customerId);
+        CustomerRecord record = customerRecordMap.get(accountNumber);
 
-	/**
-	 * Adds a given customer to the branch.
-	 *
-	 * @param firstName
-	 * @param lastName
-	 * @param address
-	 * @param phone
-	 * @return The customer Id
-	 */
-	public String enrollCustomer(String firstName, String lastName, String address, String phone) {
-		if (lastName == null) {
-			throw new IllegalArgumentException("The customer must have a last name");
-		}
-		CustomerRecord newCustomer = new CustomerRecord(firstName, lastName, address, phone,
-				generateUniqueAccountNumber());
-		addCustomer(newCustomer);
-		logger.println("Enrolled customer with details: " + newCustomer.getAccountNumber() + ", "
-				+ newCustomer.getFirstName() + ", " + newCustomer.getLastName() + ", " + newCustomer.getAddress() + ", "
-				+ newCustomer.getPhone());
-		return buildCustomerId(newCustomer.getAccountNumber());
-	}
+        return record;
+    }
 
-	public double deposit(String customerId, double amount) {
-		CustomerRecord record = getCustomerRecord(customerId);
-		if (record == null) {
-			throw new BranchException("Could not find customer with id " + customerId);
-		}
+    /**
+     * Adds a given customer to the branch.
+     *
+     * @param firstName
+     * @param lastName
+     * @param address
+     * @param phone
+     * @return The customer Id
+     */
+    public String enrollCustomer(String firstName, String lastName, String address, String phone) {
+        if (lastName == null) {
+            throw new IllegalArgumentException("The customer must have a last name");
+        }
+        CustomerRecord newCustomer = new CustomerRecord(firstName, lastName, address, phone,
+                generateUniqueAccountNumber());
+        addCustomer(newCustomer);
+        logger.println("Enrolled customer with details: " + newCustomer.getAccountNumber() + ", "
+                + newCustomer.getFirstName() + ", " + newCustomer.getLastName() + ", " + newCustomer.getAddress() + ", "
+                + newCustomer.getPhone());
+        return buildCustomerId(newCustomer.getAccountNumber());
+    }
 
-		double total = record.deposit(amount);
-		return total;
-	}
+    public double deposit(String customerId, double amount) {
+        CustomerRecord record = getCustomerRecord(customerId);
+        if (record == null) {
+            throw new BranchException("Could not find customer with id " + customerId);
+        }
 
-	public double withdraw(String customerId, double amount) {
-		CustomerRecord record = getCustomerRecord(customerId);
-		if (record == null) {
-			throw new BranchException("Could not find customer with id " + customerId);
-		}
+        double total = record.deposit(amount);
+        return total;
+    }
 
-		double total = record.withdraw(amount);
-		return total;
-	}
+    public double withdraw(String customerId, double amount) {
+        CustomerRecord record = getCustomerRecord(customerId);
+        if (record == null) {
+            throw new BranchException("Could not find customer with id " + customerId);
+        }
 
-	public double getBalance(String customerId) {
-		CustomerRecord record = getCustomerRecord(customerId);
+        double total = record.withdraw(amount);
+        return total;
+    }
 
-		return record.getAccountTotal();
-	}
-	
-	public int getAccountCount() {
-		return customerRecordMap.size();
-	}
+    public double getBalance(String customerId) {
+        CustomerRecord record = getCustomerRecord(customerId);
 
-	// public double transferFund(String sourceCustomerId, double amount, String
-	// destinationCustomerId) {
-	// CustomerRecord sourceRecord = getCustomerRecord(sourceCustomerId);
-	// if (sourceRecord == null) {
-	// logger.println("TransferFund request for source " + sourceCustomerId
-	// + " cannot be completed, source does not exist");
-	// throw new BranchException("Invalid source id");
-	// }
-	// BranchLocation destination;
-	// try {
-	// destination = dbsService.getBranchLocation(destinationCustomerId);
-	// } catch (ServiceException e) {
-	// String errorMessage = "Unable to retrieve the branch location for destination
-	// id: " + destinationCustomerId;
-	// logger.println(errorMessage);
-	// throw new BranchException(errorMessage);
-	// }
-	//
-	// transactionManager.createTransferTransaction(sourceRecord, destination,
-	// destinationCustomerId, amount);
-	// return Double.NaN;
-	// }
+        return record.getAccountTotal();
+    }
 
-	// public Transaction addTransferedFund(InterBranchPacket packet) {
-	// CustomerRecord record = getCustomerRecord(packet.clientId);
-	// if (record == null) {
-	// return null;
-	// }
-	// Transaction transaction =
-	// transactionManager.receiveTransferTransaction(packet, record);
-	// return transaction;
-	// }
+    public int getAccountCount() {
+        return customerRecordMap.size();
+    }
 
-	private void validateCustomerId(String customerId) {
-		if (customerId == null || !customerId.substring(0, 3).equalsIgnoreCase(ID + "C") || customerId.length() != 7) {
-			throw new BranchException("Could not find customer with id " + customerId);
-		}
-	}
+    // public double transferFund(String sourceCustomerId, double amount, String
+    // destinationCustomerId) {
+    // CustomerRecord sourceRecord = getCustomerRecord(sourceCustomerId);
+    // if (sourceRecord == null) {
+    // logger.println("TransferFund request for source " + sourceCustomerId
+    // + " cannot be completed, source does not exist");
+    // throw new BranchException("Invalid source id");
+    // }
+    // BranchLocation destination;
+    // try {
+    // destination = dbsService.getBranchLocation(destinationCustomerId);
+    // } catch (ServiceException e) {
+    // String errorMessage = "Unable to retrieve the branch location for destination
+    // id: " + destinationCustomerId;
+    // logger.println(errorMessage);
+    // throw new BranchException(errorMessage);
+    // }
+    //
+    // transactionManager.createTransferTransaction(sourceRecord, destination,
+    // destinationCustomerId, amount);
+    // return Double.NaN;
+    // }
 
-	private int parseAccountNumber(String customerId) {
-		if (customerId == null) {
-			throw new IllegalArgumentException("customerId cannot be null");
-		}
-		return Integer.parseInt(customerId.substring(3));
-	}
+    // public Transaction addTransferedFund(InterBranchPacket packet) {
+    // CustomerRecord record = getCustomerRecord(packet.clientId);
+    // if (record == null) {
+    // return null;
+    // }
+    // Transaction transaction =
+    // transactionManager.receiveTransferTransaction(packet, record);
+    // return transaction;
+    // }
 
-	private String buildCustomerId(int accountNumber) {
-		Account.validateAccountNumber(accountNumber);
+    private void validateCustomerId(String customerId) {
+        if (customerId == null || !customerId.substring(0, 3).equalsIgnoreCase(ID + "C") || customerId.length() != 7) {
+            throw new BranchException("Could not find customer with id " + customerId);
+        }
+    }
 
-		String customerId = ID + "C" + accountNumber;
-		return customerId;
-	}
+    private int parseAccountNumber(String customerId) {
+        if (customerId == null) {
+            throw new IllegalArgumentException("customerId cannot be null");
+        }
+        return Integer.parseInt(customerId.substring(3));
+    }
 
-	private void addCustomer(CustomerRecord customer) {
-		customerRecordMap.put(customer.getAccountNumber(), customer);
-	}
+    private String buildCustomerId(int accountNumber) {
+        Account.validateAccountNumber(accountNumber);
 
-	private int generateUniqueAccountNumber() {
-		Random rand = new Random();
-		int candidate;
-		do {
-			candidate = rand.nextInt(Account.ACCOUNT_NUMBER_MAX_VALUE - Account.ACCOUNT_NUMBER_MIN_VALUE)
-					+ Account.ACCOUNT_NUMBER_MIN_VALUE;
-		} while (customerRecordMap.get(candidate) != null);
-		return candidate;
-	}
+        String customerId = ID + "C" + accountNumber;
+        return customerId;
+    }
 
-	public void loadCustomerRecord(CustomerRecord record) {
-		if (record == null) {
-			throw new IllegalArgumentException("Customer Record is null");
-		}
-		addCustomer(record);
-	}
-	
-	/**
-	 * Load List of string (; separator) with Customer Records into the branch.
-	 * 
-	 * @param branch
-	 * @param inputFile
-	 *            input string of the form (firstName;lastName;address;phone;
-	 *            accountNumber;accountTotal)
-	 * @return
-	 */
-	public void loadCustomerRecords(List<String> input) {
-		for (String recordLine : input) {
-			String[] fields = recordLine.split(";");
-			CustomerRecord record = new CustomerRecord(fields[0], fields[1], fields[2], fields[3],
-					Integer.parseInt(fields[4]));
-			loadCustomerRecord(record);
-			BranchImpl.logger.println("Loading record from " + recordLine);
-		}
-	}
-	
-	public List<String> saveCustomerRecords() {
-		List<String> db = new LinkedList<>();
-		for(CustomerRecord record : customerRecordMap.values()) {
-			db.add(record.toString());
-		}
-		return db;
-	}
+    private void addCustomer(CustomerRecord customer) {
+        customerRecordMap.put(customer.getAccountNumber(), customer);
+    }
 
-	public void loadManagerRecord(String managerId) {
-		if (managerId == null) {
-			throw new IllegalArgumentException("ManagerNumber cannot be null");
-		}
+    private int generateUniqueAccountNumber() {
+        Random rand = new Random();
+        int candidate;
+        do {
+            candidate = rand.nextInt(Account.ACCOUNT_NUMBER_MAX_VALUE - Account.ACCOUNT_NUMBER_MIN_VALUE)
+                    + Account.ACCOUNT_NUMBER_MIN_VALUE;
+        } while (customerRecordMap.get(candidate) != null);
+        return candidate;
+    }
 
-		managerMap.put(managerId, ID);
-	}
-	
-	
-	/**
-	 * Starts the server with argument (branchId).
-	 *
-	 * @param args
-	 */
-	public static void main(String args[]) {
-		if (args.length < 1) {
-			System.out.println("Invalid argument, use prog <branchId>");
-			System.exit(0);
-		}
-		String branchId = args[0];
-		logger = new Logger(branchId + ".log", true);
-		logger.println("Initializing branch with id: " + branchId);
+    public void loadCustomerRecord(CustomerRecord record) {
+        if (record == null) {
+            throw new IllegalArgumentException("Customer Record is null");
+        }
+        addCustomer(record);
+    }
 
-		try {
-			BranchImpl branch = new BranchImpl(branchId);
-			logger.println(branch.ID + " Branch ready");
-		} catch (Exception e) {
-			logger.println("ERROR: " + e.getMessage());
-			e.printStackTrace();
-		}
-	}
+    /**
+     * Load List of string (; separator) with Customer Records into the branch.
+     * 
+     * @param branch
+     * @param inputFile
+     *            input string of the form (firstName;lastName;address;phone;
+     *            accountNumber;accountTotal)
+     * @return
+     */
+    public void loadCustomerRecords(List<String> input) {
+        for (String recordLine : input) {
+            String[] fields = recordLine.split(";");
+            CustomerRecord record = new CustomerRecord(fields[0], fields[1], fields[2], fields[3],
+                    Integer.parseInt(fields[4]), Double.parseDouble(fields[5]));
+            loadCustomerRecord(record);
+            BranchImpl.logger.println("Loading record from " + recordLine);
+        }
+    }
+
+    public List<String> saveCustomerRecords() {
+        List<String> db = new LinkedList<>();
+        for (CustomerRecord record : customerRecordMap.values()) {
+            db.add(record.toString());
+        }
+        return db;
+    }
+
+    public void loadManagerRecord(String managerId) {
+        if (managerId == null) {
+            throw new IllegalArgumentException("ManagerNumber cannot be null");
+        }
+
+        managerMap.put(managerId, ID);
+    }
+
+    /**
+     * Starts the server with argument (branchId).
+     *
+     * @param args
+     */
+    public static void main(String args[]) {
+        if (args.length < 1) {
+            System.out.println("Invalid argument, use prog <branchId>");
+            System.exit(0);
+        }
+        String branchId = args[0];
+        logger = new Logger(branchId + ".log", true);
+        logger.println("Initializing branch with id: " + branchId);
+
+        try {
+            BranchImpl branch = new BranchImpl(branchId);
+            logger.println(branch.ID + " Branch ready");
+        } catch (Exception e) {
+            logger.println("ERROR: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }
