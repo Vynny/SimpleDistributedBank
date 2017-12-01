@@ -4,8 +4,14 @@ public class Account {
     public static final int ACCOUNT_NUMBER_MAX_VALUE = 9999;
     public static final int ACCOUNT_NUMBER_MIN_VALUE = 1000;
 
+    private static int nextAccountNumber = ACCOUNT_NUMBER_MIN_VALUE;
+
     private int accountNumber;
     private double total;
+
+    public Account() {
+        this(getNextAccountNumber());
+    }
 
     public Account(int accountNumber) {
         this(accountNumber, 0);
@@ -23,7 +29,7 @@ public class Account {
      *            The amount to deposit
      * @return The new account total after the transaction.
      */
-    synchronized double deposit(double amount) {
+    public synchronized double deposit(double amount) {
         if (amount <= 0) {
             throw new BranchException("Cannot deposit a negative amount or $0.");
         }
@@ -40,7 +46,7 @@ public class Account {
      *            The amount to withdraw
      * @return The new account total after the transaction.
      */
-    synchronized double withdraw(double amount) {
+    public synchronized double withdraw(double amount) {
         if (amount <= 0) {
             throw new BranchException("Cannot withdraw a negative amount or $0.");
         }
@@ -61,6 +67,7 @@ public class Account {
     public void setAccountNumber(int accountNumber) {
         validateAccountNumber(accountNumber);
         this.accountNumber = accountNumber;
+        updateNextAccountNumber(accountNumber);
     }
 
     public static void validateAccountNumber(int accountNumber) {
@@ -72,6 +79,14 @@ public class Account {
 
     public synchronized double getAccountTotal() {
         return total;
+    }
+
+    private static synchronized int getNextAccountNumber() {
+        return nextAccountNumber++;
+    }
+
+    private static synchronized void updateNextAccountNumber(int lastAccountNumber) {
+        nextAccountNumber = Math.max(nextAccountNumber, lastAccountNumber + 1);
     }
 
 }

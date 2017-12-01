@@ -4,6 +4,12 @@ public class CustomerRecord {
     private CustomerDetails details;
     private Account account;
 
+    public CustomerRecord(String firstName, String lastName, String address, String phone) {
+        details = new CustomerDetails(firstName, lastName, address, phone);
+        account = new Account();
+    }
+
+    
     public CustomerRecord(String firstName, String lastName, String address, String phone, int accountNumber) {
         this(firstName, lastName, address, phone, accountNumber, 0);
     }

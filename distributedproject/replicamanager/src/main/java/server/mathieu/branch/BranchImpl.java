@@ -3,7 +3,6 @@ package server.mathieu.branch;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class BranchImpl {
@@ -68,8 +67,7 @@ public class BranchImpl {
         if (lastName == null) {
             throw new IllegalArgumentException("The customer must have a last name");
         }
-        CustomerRecord newCustomer = new CustomerRecord(firstName, lastName, address, phone,
-                generateUniqueAccountNumber());
+        CustomerRecord newCustomer = new CustomerRecord(firstName, lastName, address, phone);
         addCustomer(newCustomer);
         logger.println("Enrolled customer with details: " + newCustomer.getAccountNumber() + ", "
                 + newCustomer.getFirstName() + ", " + newCustomer.getLastName() + ", " + newCustomer.getAddress() + ", "
@@ -99,6 +97,9 @@ public class BranchImpl {
 
     public double getBalance(String customerId) {
         CustomerRecord record = getCustomerRecord(customerId);
+        if (record == null) {
+            throw new BranchException("Could not find customer with id " + customerId);
+        }
 
         return record.getAccountTotal();
     }
@@ -106,39 +107,6 @@ public class BranchImpl {
     public int getAccountCount() {
         return customerRecordMap.size();
     }
-
-    // public double transferFund(String sourceCustomerId, double amount, String
-    // destinationCustomerId) {
-    // CustomerRecord sourceRecord = getCustomerRecord(sourceCustomerId);
-    // if (sourceRecord == null) {
-    // logger.println("TransferFund request for source " + sourceCustomerId
-    // + " cannot be completed, source does not exist");
-    // throw new BranchException("Invalid source id");
-    // }
-    // BranchLocation destination;
-    // try {
-    // destination = dbsService.getBranchLocation(destinationCustomerId);
-    // } catch (ServiceException e) {
-    // String errorMessage = "Unable to retrieve the branch location for destination
-    // id: " + destinationCustomerId;
-    // logger.println(errorMessage);
-    // throw new BranchException(errorMessage);
-    // }
-    //
-    // transactionManager.createTransferTransaction(sourceRecord, destination,
-    // destinationCustomerId, amount);
-    // return Double.NaN;
-    // }
-
-    // public Transaction addTransferedFund(InterBranchPacket packet) {
-    // CustomerRecord record = getCustomerRecord(packet.clientId);
-    // if (record == null) {
-    // return null;
-    // }
-    // Transaction transaction =
-    // transactionManager.receiveTransferTransaction(packet, record);
-    // return transaction;
-    // }
 
     private void validateCustomerId(String customerId) {
         if (customerId == null || !customerId.substring(0, 3).equalsIgnoreCase(ID + "C") || customerId.length() != 7) {
@@ -162,16 +130,6 @@ public class BranchImpl {
 
     private void addCustomer(CustomerRecord customer) {
         customerRecordMap.put(customer.getAccountNumber(), customer);
-    }
-
-    private int generateUniqueAccountNumber() {
-        Random rand = new Random();
-        int candidate;
-        do {
-            candidate = rand.nextInt(Account.ACCOUNT_NUMBER_MAX_VALUE - Account.ACCOUNT_NUMBER_MIN_VALUE)
-                    + Account.ACCOUNT_NUMBER_MIN_VALUE;
-        } while (customerRecordMap.get(candidate) != null);
-        return candidate;
     }
 
     public void loadCustomerRecord(CustomerRecord record) {
@@ -214,28 +172,5 @@ public class BranchImpl {
         }
 
         managerMap.put(managerId, ID);
-    }
-
-    /**
-     * Starts the server with argument (branchId).
-     *
-     * @param args
-     */
-    public static void main(String args[]) {
-        if (args.length < 1) {
-            System.out.println("Invalid argument, use prog <branchId>");
-            System.exit(0);
-        }
-        String branchId = args[0];
-        logger = new Logger(branchId + ".log", true);
-        logger.println("Initializing branch with id: " + branchId);
-
-        try {
-            BranchImpl branch = new BranchImpl(branchId);
-            logger.println(branch.ID + " Branch ready");
-        } catch (Exception e) {
-            logger.println("ERROR: " + e.getMessage());
-            e.printStackTrace();
-        }
     }
 }
