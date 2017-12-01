@@ -1,6 +1,3 @@
-Instructions
--
-
 Running Included Binaries
 -
 
