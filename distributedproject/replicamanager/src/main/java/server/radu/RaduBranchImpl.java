@@ -7,12 +7,12 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Random;
 
 public class RaduBranchImpl implements BranchServer {
     ServerDatabase ser;
@@ -23,7 +23,7 @@ public class RaduBranchImpl implements BranchServer {
     public RaduBranchImpl(String branch) {
         ser = new ServerDatabase(branch);
         accIncr = 1;
-        formatter = NumberFormat.getCurrencyInstance();
+        formatter = new DecimalFormat("$#0.00");
     }
 
     public void setDatabase(ServerDatabase db) {
@@ -353,7 +353,7 @@ public class RaduBranchImpl implements BranchServer {
 
                 ser.trackOperation("The client with ID " + customerID + ", known as " + userInfo.get(3) + " " + userInfo.get(4) +
                         ", has failed to withdraw " + amount + " from their account because they don't have enough funds. Date: " + timeStamp);
-                return "You do not have enough funds to withdraw " + formatter.format(Double.parseDouble(amount)) + "."
+                return "You do not have enough funds to withdraw " + formatter.format(Double.parseDouble(amount)) + ". "
                         + "Your balance is " + formatter.format(currentBalance);
 
             } else {

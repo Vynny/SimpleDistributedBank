@@ -101,21 +101,23 @@ public class SylvainBranchImpl implements BranchServer {
         BankLogger.logAction("\tcustomerId: " + customerId);
         BankLogger.logAction("\tamount: " + amount);
 
+        BigDecimal moneyAmount = moneyFormat(amount);
+
         String response;
         CustomerUser customerUser = this.customerDatabase.getCustomer(customerId);
         if (customerUser != null) {
             BankAccount bankAccount = customerUser.getBankAccount();
 
-            if (!bankAccount.validateAmount(new BigDecimal(amount))) {
+            if (!bankAccount.validateAmount(moneyAmount)) {
                 response = BankLogger.logAndReturn("Cannot deposit a negative amount or $0.");
             } else {
 
-                if (new BigDecimal(amount).compareTo(new BigDecimal("423")) == 0) {
+                if (moneyAmount.compareTo(new BigDecimal("423")) == 0) {
                     //BYZANTINE ERROR
-                    bankAccount.deposit(new BigDecimal(amount).subtract(new BigDecimal("23")));
+                    bankAccount.deposit(moneyAmount.subtract(new BigDecimal("23")));
                 } else {
                     //NORMAL CASE
-                    bankAccount.deposit(new BigDecimal(amount));
+                    bankAccount.deposit(moneyAmount);
                 }
 
                 response = BankLogger.logAndReturn("Deposited $" + amount + " into your account (" + customerId + "). New Balance: $" + bankAccount.getBalance());
@@ -134,19 +136,21 @@ public class SylvainBranchImpl implements BranchServer {
         BankLogger.logAction("\tcustomerId: " + customerId);
         BankLogger.logAction("\tamount: " + amount);
 
+        BigDecimal moneyAmount = moneyFormat(amount);
+
         String response;
         CustomerUser customerUser = this.customerDatabase.getCustomer(customerId);
         if (customerUser != null) {
             BankAccount bankAccount = customerUser.getBankAccount();
 
-            if (!bankAccount.validateAmount(new BigDecimal(amount))) {
+            if (!bankAccount.validateAmount(moneyAmount)) {
                 response = BankLogger.logAndReturn("Cannot withdraw a negative amount or $0");
             } else {
-                if (bankAccount.canWithdraw(new BigDecimal(amount))) {
-                    bankAccount.withdraw(new BigDecimal(amount));
-                    response = BankLogger.logAndReturn("Withdrew $" + amount + " from your account. (" + customerId + "). New Balance: $" + bankAccount.getBalance());
+                if (bankAccount.canWithdraw(moneyAmount)) {
+                    bankAccount.withdraw(moneyAmount);
+                    response = BankLogger.logAndReturn("Withdrew $" + moneyAmount.toString() + " from your account. (" + customerId + "). New Balance: $" + bankAccount.getBalance());
                 } else {
-                    response = BankLogger.logAndReturn("You do not have enough funds to withdraw $" + amount + ". Your balance is $" + bankAccount.getBalance());
+                    response = BankLogger.logAndReturn("You do not have enough funds to withdraw $" + moneyAmount.toString() + ". Your balance is $" + bankAccount.getBalance());
                 }
             }
 
@@ -186,5 +190,9 @@ public class SylvainBranchImpl implements BranchServer {
     @Override
     public void restoreDatabase(List<String> databaseDump) {
         //NOT SUPPORTED
+    }
+
+    private BigDecimal moneyFormat(String string){
+        return new BigDecimal(string).setScale(2, BigDecimal.ROUND_HALF_UP);
     }
 }
