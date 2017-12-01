@@ -29,7 +29,7 @@ public class FrontEndImpl extends FrontEndPOA {
 		try {
 			udp = new ReliableUDP();
 			messages = new Message[12];
-			startFEUDP();
+		//	startFEUDP();
 		}
 
 		catch(Exception e) {
@@ -73,7 +73,7 @@ public class FrontEndImpl extends FrontEndPOA {
 					++mInd;
 			//	}
 			}
-			System.out.println(mInd);
+		//	System.out.println(mInd);
 			if ((mInd == 3 && count == false)) {
 				// we received all the replies, we can now handle the 3 messages to produce one correct reply for the client
 				try {
@@ -135,6 +135,18 @@ public class FrontEndImpl extends FrontEndPOA {
 	// this method checks the 3 replies and produces one single correct result
 	private String handleReplies(boolean getCount) throws Exception{
 		boolean problemDetected = false;
+		System.out.print("Going to handle:\n");
+		for (int i = 0; i < messages.length; ++i) {
+			Message rep = messages[i];
+			if (rep != null) {
+				BranchReplyBody b;
+				String r = "";
+				b = (BranchReplyBody)rep.getBody();
+				r = b.getReply();
+				System.out.println(i + "." + r + "\n");
+			}
+		}
+
 		String correctResult = "";
 		int failedIndexes[] = new int[2];
 		if (getCount == true){
@@ -163,8 +175,9 @@ public class FrontEndImpl extends FrontEndPOA {
 							correctResult = rI;
 				//			System.out.println("correct result1:" + correctResult);
 						} else if (!problemDetected){
+						//	System.out.println(rI + " vs " + rJ +  " IN: " + replyI.getHeader().originAddress);
 							// we got a problem
-							System.out.println("OMG detected a byzantine error, standy by please we got this.");
+							System.out.println("Detected a byzantine error.");
 							problemDetected = true;
 							failedIndexes[0] = i;
 							failedIndexes[1] = j;
@@ -186,7 +199,6 @@ public class FrontEndImpl extends FrontEndPOA {
 					String rI = bodyI.getReply();
 					String rJ = bodyJ.getReply();
 					String failedRM = "";
-					System.out.println("SEQ + branch is: SEQ" + branch);
 					if (rI.equalsIgnoreCase(correctResult)) {
 						correctResult = rJ;
 						failedRM = replyI.getHeader().originId;
@@ -322,7 +334,6 @@ public class FrontEndImpl extends FrontEndPOA {
 		while (finalResult == "") {
 			// wait for the system to compute the result
 			organizeReplies(false);
-			System.out.println("");
 		}
 		retMessage = finalResult;
 		finalizeOp();
