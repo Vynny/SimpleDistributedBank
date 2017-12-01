@@ -275,17 +275,17 @@ public class FrontEndImpl extends FrontEndPOA {
 		branch = managerID.substring(0, 2);
 		try {
 			BranchRequestBody body = new BranchRequestBody().getAccountCount(managerID);
-			udp.send(body, "getAccountCount", resolveSequencerId(managerID), FEID);
+			udp.send(body, "getAccountCount", "SEQQC", FEID);
 			int feid = Integer.valueOf(FEID);
 			feid++;
 			String newFEID = String.valueOf(feid);
-			udp.send(body, "getAccountCount", resolveSequencerId(managerID), newFEID);
+			udp.send(body, "getAccountCount", "SEQMB", newFEID);
 			feid++;
 			newFEID = String.valueOf(feid);
-			udp.send(body, "getAccountCount", resolveSequencerId(managerID), newFEID);
+			udp.send(body, "getAccountCount", "SEQNB", newFEID);
 			feid++;
 			newFEID = String.valueOf(feid);
-			udp.send(body, "getAccountCount", resolveSequencerId(managerID), newFEID);
+			udp.send(body, "getAccountCount", "SEQBC", newFEID);
 			System.out.println("Sent a multicast to the sequencer for getAccountCount.");
 		}
 		catch(Exception e) {
