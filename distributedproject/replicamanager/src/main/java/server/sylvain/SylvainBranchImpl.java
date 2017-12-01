@@ -148,7 +148,7 @@ public class SylvainBranchImpl implements BranchServer {
             } else {
                 if (bankAccount.canWithdraw(moneyAmount)) {
                     bankAccount.withdraw(moneyAmount);
-                    response = BankLogger.logAndReturn("Withdrew $" + moneyAmount.toString() + " from your account. (" + customerId + "). New Balance: $" + bankAccount.getBalance());
+                    response = BankLogger.logAndReturn("Withdrew $" + moneyAmount.toString() + " from your account (" + customerId + "). New Balance: $" + bankAccount.getBalance());
                 } else {
                     response = BankLogger.logAndReturn("You do not have enough funds to withdraw $" + moneyAmount.toString() + ". Your balance is $" + bankAccount.getBalance());
                 }

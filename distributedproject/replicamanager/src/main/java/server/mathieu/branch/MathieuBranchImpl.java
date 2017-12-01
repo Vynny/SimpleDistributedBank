@@ -71,7 +71,7 @@ public class MathieuBranchImpl implements BranchServer {
 			return e.getMessage();
 		}
 
-		return String.format("Withdrew $%s from your account (%s). New Balance: $%.2f", amount, customerId, newBalance);
+		return String.format("Withdrew $%.2f from your account (%s). New Balance: $%.2f", new BigDecimal(amount).doubleValue(), customerId, newBalance);
 	}
 
 	@Override
