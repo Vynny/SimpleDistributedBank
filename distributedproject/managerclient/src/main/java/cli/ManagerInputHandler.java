@@ -44,16 +44,16 @@ public class ManagerInputHandler extends InputHandler {
 
                         switch (requestedAction) {
                             case CREATE_RECORD:
-                                BankLogger.logUserAction(managerId, serverRemote.createAccountRecord(fullCommand[1], fullCommand[2], fullCommand[3], fullCommand[4], fullCommand[5], fullCommand[6]));
+                                BankLogger.logUserAction(managerId, serverRemote.createAccountRecord(managerId, fullCommand[2], fullCommand[3], fullCommand[4], fullCommand[5], fullCommand[6]));
                                 break;
                             case EDIT_RECORD:
-                                BankLogger.logUserAction(managerId, serverRemote.editRecord(fullCommand[1], fullCommand[2], fullCommand[3], fullCommand[4]));
+                                BankLogger.logUserAction(managerId, serverRemote.editRecord(managerId, fullCommand[2], fullCommand[3], fullCommand[4]));
                                 break;
                             case TRANSFER:
                                 //UDPBroadcaster.transferFund(managerId, fullCommand[2], fullCommand[3], fullCommand[4]);
                                 break;
                             case GET_ACCOUNT_COUNT:
-                                //UDPBroadcaster.getAccountCount(managerId);
+                                BankLogger.logUserAction(managerId, serverRemote.getAccountCount(managerId));
                                 break;
                             case DEPOSIT:
                                 BankLogger.logUserAction(managerId, serverRemote.deposit(fullCommand[2], fullCommand[3]));
