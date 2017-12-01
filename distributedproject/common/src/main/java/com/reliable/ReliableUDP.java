@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class ReliableUDP {
 	private static final String LOCATION_DB_FILENAME = "location.csv";
@@ -125,6 +126,15 @@ public class ReliableUDP {
 	public Message receive() {
 		try {
 			return messageBuffer.take();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public Message receiveTimeout(long timeoutMilliseconds) {
+		try {
+			return messageBuffer.poll(timeoutMilliseconds, TimeUnit.MILLISECONDS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
