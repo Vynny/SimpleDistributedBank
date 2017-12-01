@@ -35,7 +35,7 @@ public class FEServer extends Thread {
 
         // create servant and register it with the ORB
         FrontEndImpl feImpl = new FrontEndImpl();
-        feImpl.setAttribs(orb, "1234");
+        feImpl.setAttributes(orb, "1234");
         // get object reference from the servant
         org.omg.CORBA.Object ref = rootpoa.servant_to_reference(feImpl);
         // and cast the reference to a CORBA reference

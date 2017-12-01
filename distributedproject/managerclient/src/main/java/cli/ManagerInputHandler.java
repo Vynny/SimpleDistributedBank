@@ -35,10 +35,7 @@ public class ManagerInputHandler extends InputHandler {
             String managerId = fullCommand[1];
             if (isUserIdValid(managerId)) {
                 try {
-                    FrontEnd serverRemote = null;
-
-                    if (requestedAction != Action.GET_ACCOUNT_COUNT && requestedAction != Action.TRANSFER)
-                        serverRemote = CORBAConnector.connectFrontEnd();
+                    FrontEnd serverRemote = CORBAConnector.connectFrontEnd();
 
                     if (requestedAction == Action.GET_ACCOUNT_COUNT || requestedAction == Action.TRANSFER || serverRemote != null) {
 
