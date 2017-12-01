@@ -1,9 +1,9 @@
 package server.mathieu.branch;
 
+import server.BranchServer;
+
 import java.math.BigDecimal;
 import java.util.List;
-
-import server.BranchServer;
 
 public class MathieuBranchImpl implements BranchServer {
 	BranchImpl branchServer;
@@ -71,7 +71,7 @@ public class MathieuBranchImpl implements BranchServer {
 			return e.getMessage();
 		}
 
-		return String.format("Withdrew $%s into your account (%s). New Balance: $%.2f", amount, customerId, newBalance);
+		return String.format("Withdrew $%s from your account (%s). New Balance: $%.2f", amount, customerId, newBalance);
 	}
 
 	@Override
