@@ -6,10 +6,7 @@ public class ErrorHelper {
         Integer origin1Number = NameHelper.extractRmNumber(origin1);
         Integer origin2Number = NameHelper.extractRmNumber(origin2);
 
-        if (origin1Number != myNumber || origin2Number != myNumber)
-            return true;
-
-        return false;
+        return origin1Number != myNumber && origin2Number != myNumber;
     }
 
     public static boolean didIByzantine(String myId, String origin) {

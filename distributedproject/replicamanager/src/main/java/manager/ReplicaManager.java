@@ -140,19 +140,26 @@ public class ReplicaManager {
                     //Do nothing to simulate a crash
                 } else {
                     if (!didFail)
-                        reliableUDP.reply(header, replyBody, "");
+                        if (replyBody.getReply() != null || replyBody.getReplyList() != null)
+                            reliableUDP.reply(header, replyBody, "");
                 }
             } catch (SocketException e) {
                 e.printStackTrace();
             }
         } else {
             //Error restoration, waiting on db dump
-            BranchReplyBody body = (BranchReplyBody) message.getBody();
+            try {
+                BranchReplyBody body = (BranchReplyBody) message.getBody();
 
-            List<String> databaseDump = body.getReplyList();
-            this.branchServer.restoreDatabase(databaseDump);
+                List<String> databaseDump = body.getReplyList();
 
-            resetErrorFlags();
+                System.out.println("\nRestoring server database!");
+                this.branchServer.restoreDatabase(databaseDump);
+
+                resetErrorFlags();
+            } catch (ClassCastException e) {
+                System.out.println("Message does not contain a db dump. " + replicaName());
+            }
         }
     }
 
@@ -210,7 +217,8 @@ public class ReplicaManager {
                     handleRestart();
                 break;
             case REQUEST_DB_DUMP:
-                provideDatabaseDump(header);
+                if (serverImpl == ServerImpl.MATHIEU)
+                    provideDatabaseDump(header);
                 break;
         }
 
@@ -254,19 +262,27 @@ public class ReplicaManager {
     }
 
     private void provideDatabaseDump(MessageHeader header) {
+        System.out.println("Providing a database dump to " + header.originId);
         //Generate the database dump
         BranchReplyBody replyBody = new BranchReplyBody();
-        replyBody.setReplyList(this.branchServer.dumpDatabase());
+
+        List<String> dbDump = this.branchServer.dumpDatabase();
+        for (String s : dbDump) {
+            System.out.println("DB LINE: " + s);
+        }
+        replyBody.setReplyList(dbDump);
 
         //Send to crashed replica
         try {
             reliableUDP.reply(header, replyBody, "");
+            System.out.println("-DB dump sent to " + header.originId);
         } catch (SocketException e) {
             e.printStackTrace();
         }
     }
 
     private void resetErrorFlags() {
+        System.out.println("Error has been handled. Failure flags have been reset, functionality back to normal.");
         this.didFail = false;
     }
 
