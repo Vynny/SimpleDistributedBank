@@ -4,8 +4,8 @@ Running Included Binaries
 ### Run ORB Daemon
 1) Open a console window
 2) Run the command
-- **Unix**: orbd -ORBInitialPort 1050 -ORBInitialHost 127.0.0.1
-- **Windows**: start orbd -ORBInitialPort 1050 -ORBInitialHost 127.0.0.1
+    - **Unix**: orbd -ORBInitialPort 1050 -ORBInitialHost 127.0.0.1
+    - **Windows**: start orbd -ORBInitialPort 1050 -ORBInitialHost 127.0.0.1
 
 
 ### Start FrontEnd
@@ -16,15 +16,15 @@ Running Included Binaries
 ### Start Sequencer
 5) From sequencer/
 6) Run 'java -jar target/sequencer-1.0.jar <branch>'
-- **branch**: QC, MB, NB, BC
+    - **branch**: QC, MB, NB, BC
 
 
 ### Start ReplicaManager
 7) From replicamanager/
 8) Run 'java -jar target/replicamanager-1.0.jar \<implementation> \<branch> \<id>'
-- **implementation**: RA (Radu), SY (Sylvain), MA (Mathieu)
-- **branch**: QC, MB, NB, BC
-- **id**: 1, 2, 3 (do not start duplicates)
+    - **implementation**: RA (Radu), SY (Sylvain), MA (Mathieu)
+    - **branch**: QC, MB, NB, BC
+    - **id**: 1, 2, 3 (do not start duplicates)
 
 
 ### Start Client(s)
