@@ -53,7 +53,7 @@ public class FrontEndImpl extends FrontEndPOA {
 		while (!receivedAllResults) {
 			if (success)
 				return;
-			Message reply = udp.receive();
+			Message reply = udp.receiveTimeout(100);
 			if (reply != null) {
 				printReply(reply);
 
