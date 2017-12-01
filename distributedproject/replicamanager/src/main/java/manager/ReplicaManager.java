@@ -142,6 +142,8 @@ public class ReplicaManager {
                     if (!didFail)
                         if (replyBody.getReply() != null || replyBody.getReplyList() != null)
                             reliableUDP.reply(header, replyBody, "");
+                        else
+                            System.out.println("Empty reply body, nothing sent.");
                 }
             } catch (SocketException e) {
                 e.printStackTrace();
