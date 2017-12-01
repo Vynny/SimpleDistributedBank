@@ -133,7 +133,8 @@ public class ServerDatabase {
 
         List<String> s = new ArrayList<String>();
         List<String> s2 = new ArrayList<String>();
-
+        List<String> s3 = new ArrayList<String>();
+        List<String> s4 = new ArrayList<String>();
         s.add(branch + "C1000");
         s.add("0");
         s.add(branch);
@@ -148,8 +149,23 @@ public class ServerDatabase {
         s2.add("Toto");
         s2.add("Montreal");
         s2.add("514");
-
+        s.add(branch + "C1001");
+        s.add("0");
+        s.add(branch);
+        s.add("Radu");
+        s.add("Saghin");
+        s.add("Terrebonne");
+        s.add("514");
+        s.add(branch + "M1001");
+        s.add("0");
+        s.add(branch);
+        s.add("Radu");
+        s.add("Saghin");
+        s.add("Terrebonne");
+        s.add("514");
         addUserToDatabase("S", s);
         addUserToDatabase("T", s2);
+        addUserToDatabase("S",s3);
+        addUserToDatabase("S",s4);
     }
 }

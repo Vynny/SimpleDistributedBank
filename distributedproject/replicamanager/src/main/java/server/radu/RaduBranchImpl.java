@@ -112,7 +112,8 @@ public class RaduBranchImpl implements BranchServer {
     }
 
     public String getAccountCount(String managerID) {
-
+    	String ret = ser.branch + ": " + ser.getDBSize();
+/*
         DatagramSocket aSocket = null;
         String timeStamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(Calendar.getInstance().getTime());
 
@@ -161,7 +162,7 @@ public class RaduBranchImpl implements BranchServer {
         } catch (Exception e) {
             System.out.println("General exception: " + e.getMessage());
         }
-
+*/
         return ret;
     }
 
@@ -390,8 +391,7 @@ public class RaduBranchImpl implements BranchServer {
 
     @Override
     public String getAccountCount() {
-        //TODO: get account count
-        return null;
+        return ser.branch + ": " + ser.getDBSize();
     }
 
     @Override

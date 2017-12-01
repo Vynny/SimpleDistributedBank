@@ -51,6 +51,8 @@ public class FrontEndImpl extends FrontEndPOA {
 	private void organizeReplies(boolean count) {
 		int mInd = 0;
 		while (!receivedAllResults) {
+			if (success)
+				return;
 			Message reply = udp.receive();
 			if (reply != null) {
 				printReply(reply);
@@ -119,6 +121,7 @@ public class FrontEndImpl extends FrontEndPOA {
 					  try {
 						  udp.send(body, "notifyCrashError","SEQ"+branch, FEID);
 						  finalResult = handleReplies(false);
+						  
 					  }
 					  catch(Exception e) {
 						  System.out.println("Failed to notify the sequencer about a crash error");
@@ -319,6 +322,7 @@ public class FrontEndImpl extends FrontEndPOA {
 		while (finalResult == "") {
 			// wait for the system to compute the result
 			organizeReplies(false);
+			System.out.println("");
 		}
 		retMessage = finalResult;
 		finalizeOp();
