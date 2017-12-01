@@ -47,7 +47,8 @@ A full start requires:
 - 1 FrontEnd
 - n Clients (manager or customer)
 
-To start all the required binaries at once, run **startall.bat**.
+To start all the required binaries at once, run:
+    - **Windows**: startall.bat
 
 ### Triggering Errors
 #### Byzantine
