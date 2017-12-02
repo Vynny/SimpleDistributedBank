@@ -49,6 +49,12 @@ public class FrontEndImpl extends FrontEndPOA {
         }
     }
 
+    /*
+     *
+     * Handle UDP Replies
+     *
+     */
+
     private void organizeReplies(OperationType operationType) {
         int mInd = 0;
         while (!receivedAllResults) {
@@ -60,7 +66,7 @@ public class FrontEndImpl extends FrontEndPOA {
                 printReply(reply);
 
                 receivedFirstReply = true;
-                // just to check that this is indeed the first and only reply
+                //Check that this is indeed the first and only reply
                 for (int i = 0; i < messages.length; ++i) {
                     if (messages[i] != null)
                         receivedFirstReply = false;
@@ -72,52 +78,58 @@ public class FrontEndImpl extends FrontEndPOA {
                 ++mInd;
             }
 
-            if ((mInd == 3 && operationType == OperationType.NORMAL)) {
-                //We received all the replies, we can now handle the 3 messages to produce one correct reply for the client
-                try {
-                    receivedAllResults = true;
-                    //Handle Replies
-                    finalResult = handleReplies(false);
-
-                } catch (Exception e) {
-                    System.out.println("Problem in handling replies in the Front End");
-                }
-                mInd = 0;
-            } else if ((mInd == 12 && operationType == OperationType.GETACCOUNTCOUNT)) {
-                //We received all the replies, we can now handle the 3 messages to produce one correct reply for the client
-                try {
-                    receivedAllResults = true;
-                    finalResult = handleReplies(true);
-                } catch (Exception e) {
-                    System.out.println("Problem in handling replies in the Front End");
-                }
-                mInd = 0;
+            switch (operationType) {
+                case NORMAL:
+                    if (mInd == 3)
+                        handleNormalOperation();
+                    break;
+                case GETACCOUNTCOUNT:
+                    if (mInd == 12)
+                        handleGetAccountCount();
+                    break;
+                case TRANSFERFUND:
+                    break;
             }
         }
     }
 
-    private void startHandlingPotentialRMCrash() {
-        System.out.println("Started watching out for potential RM crashes");
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                if (!success) {
-                    System.err.println("It's been " + ERROR_TIMEOUT + "ms and the Front End hasn't received all the needed replies");
-                    BranchRequestBody body = new BranchRequestBody().notifyCrashError(
-                            messages[0].getHeader().originId,
-                            messages[1].getHeader().originId);
-                    try {
-                        udp.send(body, "notifyCrashError", "SEQ" + branch, FEID);
-                        finalResult = handleReplies(false);
-                    } catch (Exception e) {
-                        System.out.println("Failed to notify the sequencer about a crash error");
-                    }
-                }
-            }
-        }, ERROR_TIMEOUT);
+    /*
+     *
+     * Handle various OperationTypes
+     *
+     */
+
+    private void handleNormalOperation() {
+        //Handle the 3 messages to produce one correct reply for the client
+        try {
+            receivedAllResults = true;
+            //Handle Replies
+            finalResult = handleReplies(false);
+
+        } catch (Exception e) {
+            System.out.println("Problem in handling replies in the Front End");
+        }
+    }
+
+    private void handleGetAccountCount() {
+        //Handle the 12 messages to produce one correct reply for the client
+        try {
+            receivedAllResults = true;
+            finalResult = handleReplies(true);
+        } catch (Exception e) {
+            System.out.println("Problem in handling replies in the Front End");
+        }
+    }
+
+    private void handleTransferFund() {
 
     }
+
+    /*
+     *
+     * Handle Replies
+     *
+     */
 
     //This method checks the 3 replies and produces one single correct result
     private String handleReplies(boolean getCount) throws Exception {
@@ -214,6 +226,40 @@ public class FrontEndImpl extends FrontEndPOA {
         success = true;
         return correctResult;
     }
+
+    /*
+     *
+     * Potential Error Handling
+     *
+     */
+
+    private void startHandlingPotentialRMCrash() {
+        System.out.println("Started watching out for potential RM crashes");
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (!success) {
+                    System.err.println("It's been " + ERROR_TIMEOUT + "ms and the Front End hasn't received all the needed replies");
+                    BranchRequestBody body = new BranchRequestBody().notifyCrashError(
+                            messages[0].getHeader().originId,
+                            messages[1].getHeader().originId);
+                    try {
+                        udp.send(body, "notifyCrashError", "SEQ" + branch, FEID);
+                        finalResult = handleReplies(false);
+                    } catch (Exception e) {
+                        System.out.println("Failed to notify the sequencer about a crash error");
+                    }
+                }
+            }
+        }, ERROR_TIMEOUT);
+    }
+
+    /*
+     *
+     * Client Methods
+     *
+     */
 
     public String createAccountRecord(String managerID, String firstName, String lastName, String address, String phone, String branch) {
         branch = managerID.substring(0, 2);
@@ -351,6 +397,17 @@ public class FrontEndImpl extends FrontEndPOA {
         return retMessage;
     }
 
+    @Override
+    public void shutdown() {
+        // TODO Auto-generated method stub
+    }
+
+    /*
+     *
+     * Utilities
+     *
+     */
+
     private void finalizeOp() {
         finalResult = "";
         receivedAllResults = false;
@@ -367,11 +424,5 @@ public class FrontEndImpl extends FrontEndPOA {
         System.out.println("\t-Origin Address: " + message.getHeader().originAddress);
         System.out.println("\t-Dest ID: " + message.getHeader().destinationId);
         System.out.println("\t-Dest Address: " + message.getHeader().destinationAddress + "\n");
-    }
-
-    @Override
-    public void shutdown() {
-        // TODO Auto-generated method stub
-
     }
 }
