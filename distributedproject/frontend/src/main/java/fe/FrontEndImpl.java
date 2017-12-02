@@ -16,7 +16,7 @@ public class FrontEndImpl extends FrontEndPOA {
 
     private static final int ERROR_TIMEOUT = 3000;
 
-//    private ORB orb;
+    //    private ORB orb;
     private String FEID;
     private String branch;
 
@@ -36,19 +36,12 @@ public class FrontEndImpl extends FrontEndPOA {
         receivedAllResults = false;
 
         try {
-            udp = new ReliableUDP();
             messages = new Message[12];
-            //	startFEUDP();
+            udp = new ReliableUDP();
         } catch (Exception e) {
             System.out.println("Could not start reliable UDP listener!");
             System.exit(0);
         }
-    }
-
-    public void startFEUDP() {
-        System.out.println("Starting udp listener for the FE in a new thread");
-        Thread t = new Thread(this::UDPListener);
-        t.start();
     }
 
     private void organizeReplies(boolean count) {
@@ -60,9 +53,6 @@ public class FrontEndImpl extends FrontEndPOA {
             if (reply != null) {
                 printReply(reply);
 
-                //String customID = reply.getHeader().customId;
-                // then the FE received the correct reply
-                //if (customID.equalsIgnoreCase(FEID)) {
                 receivedFirstReply = true;
                 // just to check that this is indeed the first and only reply
                 for (int i = 0; i < messages.length; ++i) {
@@ -74,23 +64,21 @@ public class FrontEndImpl extends FrontEndPOA {
                 }
                 messages[mInd] = reply;
                 ++mInd;
-                //	}
             }
-            //	System.out.println(mInd);
+
             if ((mInd == 3 && count == false)) {
-                // we received all the replies, we can now handle the 3 messages to produce one correct reply for the client
+                //We received all the replies, we can now handle the 3 messages to produce one correct reply for the client
                 try {
                     receivedAllResults = true;
-                    //		System.out.println("trying to handle all replies now");
+                    //Handle Replies
                     finalResult = handleReplies(false);
-                    //		System.out.println("final result should be: " + finalResult);
 
                 } catch (Exception e) {
                     System.out.println("Problem in handling replies in the Front End");
                 }
                 mInd = 0;
             } else if ((mInd == 12 && count == true)) {
-                // we received all the replies, we can now handle the 3 messages to produce one correct reply for the client
+                //We received all the replies, we can now handle the 3 messages to produce one correct reply for the client
                 try {
                     receivedAllResults = true;
                     finalResult = handleReplies(true);
@@ -113,8 +101,6 @@ public class FrontEndImpl extends FrontEndPOA {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                // so after 3 seconds, we execute this code
-
                 if (!success) {
                     System.err.println("It's been " + ERROR_TIMEOUT + "ms and the Front End hasn't received all the needed replies");
                     BranchRequestBody body = new BranchRequestBody().notifyCrashError(
@@ -126,7 +112,6 @@ public class FrontEndImpl extends FrontEndPOA {
                     } catch (Exception e) {
                         System.out.println("Failed to notify the sequencer about a crash error");
                     }
-
                 }
             }
         }, ERROR_TIMEOUT);
@@ -172,13 +157,10 @@ public class FrontEndImpl extends FrontEndPOA {
                         String rJ = bodyJ.getReply();
 
                         if (rI.equalsIgnoreCase(rJ)) {
-                            // then the results are the same
-
+                            //Results are the same
                             correctResult = rI;
-                            //			System.out.println("correct result1:" + correctResult);
                         } else if (!problemDetected) {
-                            //	System.out.println(rI + " vs " + rJ +  " IN: " + replyI.getHeader().originAddress);
-                            // we got a problem
+                            //We got a problem
                             System.out.println("Detected a byzantine error.");
                             problemDetected = true;
                             failedIndexes[0] = i;
@@ -227,7 +209,7 @@ public class FrontEndImpl extends FrontEndPOA {
         int newFEID = Integer.parseInt(FEID);
         newFEID++;
         FEID = String.valueOf(newFEID);
-        //System.out.println("correct result:" + correctResult);
+        
         success = true;
         return correctResult;
     }
@@ -368,10 +350,6 @@ public class FrontEndImpl extends FrontEndPOA {
         return retMessage;
     }
 
-//    public void shutdown() {
-//        orb.shutdown(false);
-//    }
-
     private void finalizeOp() {
         finalResult = "";
         receivedAllResults = false;
@@ -393,6 +371,6 @@ public class FrontEndImpl extends FrontEndPOA {
     @Override
     public void shutdown() {
         // TODO Auto-generated method stub
-        
+
     }
 }
