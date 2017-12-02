@@ -45,7 +45,7 @@ public class ClientInputHandler extends InputHandler {
                                 BankLogger.logUserAction(customerId, serverRemote.withdraw(customerId, fullCommand[2]));
                                 break;
                             case TRANSFER:
-                                //UDPBroadcaster.transferFund(null, fullCommand[2], fullCommand[1], fullCommand[3]);
+                                BankLogger.logUserAction(customerId, serverRemote.transferFund(customerId, fullCommand[2], fullCommand[2]));
                                 break;
                             case GETBALANCE:
                                 BankLogger.logUserAction(customerId, serverRemote.getBalance(customerId));
