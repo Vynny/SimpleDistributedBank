@@ -3,10 +3,14 @@ package fe;
 import fe.corba.FrontEnd;
 import fe.corba.FrontEndHelper;
 import org.omg.CORBA.ORB;
+import org.omg.CORBA.Policy;
 import org.omg.CosNaming.NameComponent;
 import org.omg.CosNaming.NamingContextExt;
 import org.omg.CosNaming.NamingContextExtHelper;
 import org.omg.PortableServer.POA;
+import org.omg.PortableServer.RequestProcessingPolicyValue;
+import org.omg.PortableServer.ServantRetentionPolicyValue;
+
 import util.CORBAConfig;
 
 public class FEServer extends Thread {
@@ -32,15 +36,23 @@ public class FEServer extends Thread {
     void setupCorba(ORB orb) throws Exception {
         POA rootpoa = (POA) orb.resolve_initial_references("RootPOA");
         rootpoa.the_POAManager().activate();
+        
+        Policy poaPolicy[] = new Policy[2];
+        poaPolicy[0] = rootpoa.create_servant_retention_policy(
+            ServantRetentionPolicyValue.NON_RETAIN);
+        poaPolicy[1] = rootpoa.create_request_processing_policy(
+            RequestProcessingPolicyValue.USE_SERVANT_MANAGER);
 
-        // create servant and register it with the ORB
-        FrontEndImpl feImpl = new FrontEndImpl();
-        feImpl.setAttributes(orb, "1234");
-        // get object reference from the servant
-        org.omg.CORBA.Object ref = rootpoa.servant_to_reference(feImpl);
-        // and cast the reference to a CORBA reference
-        FrontEnd href = FrontEndHelper.narrow(ref);
 
+        POA poa1 = rootpoa.create_POA("FrontEndPOA", null, poaPolicy);
+        poa1.the_POAManager().activate();
+        
+        poa1.set_servant_manager(new PoaServantLocator());
+        
+        
+        org.omg.CORBA.Object objectRef = poa1.create_reference(
+                FrontEndHelper.id());
+        
         // get the root naming context
         // NameService invokes the transient name service
         org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");
@@ -51,7 +63,7 @@ public class FEServer extends Thread {
         String name = "FrontEnd";
         NameComponent path[] = ncRef.to_name(name);
 
-        ncRef.rebind(path, href);
+        ncRef.rebind(path, objectRef);
         System.out.println("Server ready and waiting ...");
 
         // wait for invocations from clients

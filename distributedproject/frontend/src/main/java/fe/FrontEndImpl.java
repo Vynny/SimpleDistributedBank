@@ -6,7 +6,6 @@ import enums.Branch;
 import fe.corba.FrontEndPOA;
 import messages.branch.BranchReplyBody;
 import messages.branch.BranchRequestBody;
-import org.omg.CORBA.ORB;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -17,7 +16,7 @@ public class FrontEndImpl extends FrontEndPOA {
 
     private static final int ERROR_TIMEOUT = 3000;
 
-    private ORB orb;
+//    private ORB orb;
     private String FEID;
     private String branch;
 
@@ -30,8 +29,7 @@ public class FrontEndImpl extends FrontEndPOA {
     private boolean success;
     private String finalResult;
 
-    public void setAttributes(ORB orb, String FEID) {
-        this.orb = orb;
+    public void setAttributes(String FEID) {
         this.FEID = FEID;
 
         finalResult = "";
@@ -370,9 +368,9 @@ public class FrontEndImpl extends FrontEndPOA {
         return retMessage;
     }
 
-    public void shutdown() {
-        orb.shutdown(false);
-    }
+//    public void shutdown() {
+//        orb.shutdown(false);
+//    }
 
     private void finalizeOp() {
         finalResult = "";
@@ -390,5 +388,11 @@ public class FrontEndImpl extends FrontEndPOA {
         System.out.println("\t-Origin Address: " + message.getHeader().originAddress);
         System.out.println("\t-Dest ID: " + message.getHeader().destinationId);
         System.out.println("\t-Dest Address: " + message.getHeader().destinationAddress + "\n");
+    }
+
+    @Override
+    public void shutdown() {
+        // TODO Auto-generated method stub
+        
     }
 }
