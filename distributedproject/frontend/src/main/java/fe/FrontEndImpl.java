@@ -16,7 +16,12 @@ public class FrontEndImpl extends FrontEndPOA {
 
     private static final int ERROR_TIMEOUT = 3000;
 
-    //    private ORB orb;
+    public enum OperationType {
+        NORMAL,
+        GETACCOUNTCOUNT,
+        TRANSFERFUND
+    }
+
     private String FEID;
     private String branch;
 
@@ -44,11 +49,12 @@ public class FrontEndImpl extends FrontEndPOA {
         }
     }
 
-    private void organizeReplies(boolean count) {
+    private void organizeReplies(OperationType operationType) {
         int mInd = 0;
         while (!receivedAllResults) {
             if (success)
                 return;
+
             Message reply = udp.receiveTimeout(100);
             if (reply != null) {
                 printReply(reply);
@@ -59,14 +65,14 @@ public class FrontEndImpl extends FrontEndPOA {
                     if (messages[i] != null)
                         receivedFirstReply = false;
                 }
-                if (receivedFirstReply && count == false) {
+                if (receivedFirstReply && operationType == OperationType.NORMAL) {
                     startHandlingPotentialRMCrash();
                 }
                 messages[mInd] = reply;
                 ++mInd;
             }
 
-            if ((mInd == 3 && count == false)) {
+            if ((mInd == 3 && operationType == OperationType.NORMAL)) {
                 //We received all the replies, we can now handle the 3 messages to produce one correct reply for the client
                 try {
                     receivedAllResults = true;
@@ -77,22 +83,17 @@ public class FrontEndImpl extends FrontEndPOA {
                     System.out.println("Problem in handling replies in the Front End");
                 }
                 mInd = 0;
-            } else if ((mInd == 12 && count == true)) {
+            } else if ((mInd == 12 && operationType == OperationType.GETACCOUNTCOUNT)) {
                 //We received all the replies, we can now handle the 3 messages to produce one correct reply for the client
                 try {
                     receivedAllResults = true;
                     finalResult = handleReplies(true);
-
                 } catch (Exception e) {
                     System.out.println("Problem in handling replies in the Front End");
                 }
                 mInd = 0;
             }
         }
-    }
-
-    private void UDPListener() {
-        //	organizeReplies();
     }
 
     private void startHandlingPotentialRMCrash() {
@@ -209,7 +210,7 @@ public class FrontEndImpl extends FrontEndPOA {
         int newFEID = Integer.parseInt(FEID);
         newFEID++;
         FEID = String.valueOf(newFEID);
-        
+
         success = true;
         return correctResult;
     }
@@ -247,7 +248,7 @@ public class FrontEndImpl extends FrontEndPOA {
 
         while (finalResult == "") {
             // wait for the system to compute the result
-            organizeReplies(false);
+            organizeReplies(OperationType.NORMAL);
         }
         retMessage = finalResult;
         finalizeOp();
@@ -270,7 +271,7 @@ public class FrontEndImpl extends FrontEndPOA {
 
         while (finalResult == "") {
             // wait for the system to compute the result
-            organizeReplies(true);
+            organizeReplies(OperationType.GETACCOUNTCOUNT);
         }
         retMessage = finalResult;
         finalizeOp();
@@ -303,7 +304,7 @@ public class FrontEndImpl extends FrontEndPOA {
 
         while (finalResult == "") {
             // wait for the system to compute the result
-            organizeReplies(false);
+            organizeReplies(OperationType.NORMAL);
         }
         retMessage = finalResult;
         finalizeOp();
@@ -323,7 +324,7 @@ public class FrontEndImpl extends FrontEndPOA {
 
         while (finalResult == "") {
             // wait for the system to compute the result
-            organizeReplies(false);
+            organizeReplies(OperationType.NORMAL);
         }
         retMessage = finalResult;
         finalizeOp();
@@ -343,7 +344,7 @@ public class FrontEndImpl extends FrontEndPOA {
         String retMessage = "";
         while (finalResult == "") {
             // wait for the system to compute the result
-            organizeReplies(false);
+            organizeReplies(OperationType.NORMAL);
         }
         retMessage = finalResult;
         finalizeOp();
