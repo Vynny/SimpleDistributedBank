@@ -7,12 +7,16 @@ import fe.corba.FrontEndPOA;
 import messages.branch.BranchReplyBody;
 import messages.branch.BranchRequestBody;
 
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class FrontEndImpl extends FrontEndPOA {
 
@@ -110,24 +114,13 @@ public class FrontEndImpl extends FrontEndPOA {
 
     private void handleNormalOperation() {
         //Handle the 3 messages to produce one correct reply for the client
-        try {
-            receivedAllResults = true;
-            //Handle Replies
-            finalResult = handleReplies(false);
-
-        } catch (Exception e) {
-            System.out.println("Problem in handling replies in the Front End");
-        }
+        receivedAllResults = true;
+        finalResult = handleReplies(false);
     }
 
     private void handleGetAccountCount() {
-        //Handle the 12 messages to produce one correct reply for the client
-        try {
-            receivedAllResults = true;
-            finalResult = handleReplies(true);
-        } catch (Exception e) {
-            System.out.println("Problem in handling replies in the Front End");
-        }
+        receivedAllResults = true;
+        finalResult = handleReplies(true);
     }
 
     private void handleTransferFund(int messageCount) {
@@ -196,97 +189,79 @@ public class FrontEndImpl extends FrontEndPOA {
      */
 
     //This method checks the 3 replies and produces one single correct result
-    private String handleReplies(boolean getCount) throws Exception {
+    private String handleReplies(boolean getCount) {
+        String correctResult = "";
         boolean problemDetected = false;
+        Map<String, String> repliesMap = new HashMap<>(); //Key: rmId, Value: String Reply
+
+        //Print out received messages. Also add them to a list.
         System.out.print("Going to handle:\n");
         for (int i = 0; i < messages.length; ++i) {
             Message rep = messages[i];
             if (rep != null) {
                 BranchReplyBody body = (BranchReplyBody) rep.getBody();
+                repliesMap.put(rep.getHeader().originId, body.getReply().trim());
                 System.out.println(i + "." + body.getReply() + "\n");
             }
         }
 
-        String correctResult = "";
-        int failedIndexes[] = new int[2];
+        //Create a filter set to count unique messages
+        Set<String> filterSet = new HashSet<>();
+        for (String reply : repliesMap.values()) {
+            filterSet.add(reply);
+        }
+
+        //Check result similarities to detect issues
         if (getCount) {
-            Set<String> filterSet = new HashSet<>();
-            for (Message reply : messages) {
-                BranchReplyBody bodyI = (BranchReplyBody) reply.getBody();
-                filterSet.add(bodyI.getReply().trim());
-            }
             for (String uniqueReply : filterSet)
                 correctResult += uniqueReply + "\n";
-
         } else {
-            for (int i = 0; i < messages.length; ++i) {
-                for (int j = 0; j < messages.length; ++j) {
-                    if (i != j && messages[i] != null && messages[j] != null) {
-                        Message replyI = messages[i];
-                        Message replyJ = messages[j];
-
-                        BranchReplyBody bodyI = (BranchReplyBody) replyI.getBody();
-                        BranchReplyBody bodyJ = (BranchReplyBody) replyJ.getBody();
-                        String rI = bodyI.getReply();
-                        String rJ = bodyJ.getReply();
-
-                        if (rI.equalsIgnoreCase(rJ)) {
-                            //Results are the same
-                            correctResult = rI;
-                        } else if (!problemDetected) {
-                            //We got a problem
-                            System.out.println("Detected a byzantine error.");
-                            problemDetected = true;
-                            failedIndexes[0] = i;
-                            failedIndexes[1] = j;
-                        }
-
-                    }
-                }
+            if (filterSet.size() == 1) {
+                //All results are the same!
+                correctResult = filterSet.stream().findFirst().get();
+            } else {
+                //We got a problem
+                System.out.println("Detected a byzantine error.");
+                problemDetected = true;
             }
         }
 
-        boolean foundIt = false;
-        if (problemDetected)
-            for (int i = 0; i < messages.length; ++i) {
-                for (int j = 0; j < messages.length; ++j) {
-                    Message replyI = messages[i];
-                    Message replyJ = messages[j];
+        //Handle byzantine issues
+        if (problemDetected) { //Find which RM had a byzantine
+            String byzantineRmId = null;
 
-                    BranchReplyBody bodyI = (BranchReplyBody) replyI.getBody();
-                    BranchReplyBody bodyJ = (BranchReplyBody) replyJ.getBody();
-                    String rI = bodyI.getReply();
-                    String rJ = bodyJ.getReply();
-                    String failedRM = "";
-                    if (rI.equalsIgnoreCase(correctResult)) {
-                        correctResult = rJ;
-                        failedRM = replyI.getHeader().originId;
-                        System.out.println("FailedRM: " + failedRM);
-                        BranchRequestBody body = new BranchRequestBody().notifyByzantineError(failedRM);
-                        udp.send(body, "notifyByzantineError", "SEQ" + branch, FEID);
-                        foundIt = true;
-                    } else if (rJ.equalsIgnoreCase(correctResult)) {
-                        correctResult = rI;
-                        failedRM = replyJ.getHeader().originId;
-                        System.out.println("FailedRM: " + failedRM);
-                        BranchRequestBody body = new BranchRequestBody().notifyByzantineError(failedRM);
-                        udp.send(body, "notifyByzantineError", "SEQ" + branch, FEID);
-                        foundIt = true;
+            //Count occurrences to determine majority response
+            Map<String, Long> occurrenceMap = repliesMap.values().stream().collect(Collectors.groupingBy(x -> x, Collectors.counting()));
+            for (Map.Entry<String, Long> entry : occurrenceMap.entrySet()) {
+                String reply = entry.getKey();
+                Long replyOccurrenceCount = entry.getValue();
+
+                if (replyOccurrenceCount == 2) {
+                    //This is the majority reply
+                    correctResult = reply;
+                } else {
+                    //This is the error reply, send a message to warn the RM
+                    for (Map.Entry<String, String> replyEntry : repliesMap.entrySet()) {
+                        String rmId = replyEntry.getKey();
+                        String rmReply = replyEntry.getValue();
+
+                        if (rmReply.equals(reply)) {
+                            byzantineRmId = rmId;
+
+                            //Send Byzantine Error
+                            BranchRequestBody byzantineBody = new BranchRequestBody().notifyByzantineError(byzantineRmId);
+                            try {
+                                udp.send(byzantineBody, "notifyByzantineError", "SEQ" + branch, FEID);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
-                    System.err.println("The error occurred in RM: " + failedRM);
-                    if (foundIt)
-                        break;
                 }
-                if (foundIt)
-                    break;
             }
 
-        for (int i = 0; i < messages.length; ++i)
-            messages[i] = null;
-
-        int newFEID = Integer.parseInt(FEID);
-        newFEID++;
-        FEID = String.valueOf(newFEID);
+            System.err.println("The error occurred in RM: " + byzantineRmId);
+        }
 
         success = true;
         return correctResult;

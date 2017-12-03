@@ -125,10 +125,17 @@ public class ReplicaManager {
 
         if (!didFail) {
             //Normal request from FE
-            BranchRequestBody body = (BranchRequestBody) message.getBody();
+            BranchRequestBody body = null;
+            try {
+                body = (BranchRequestBody) message.getBody();
+            } catch (ClassCastException e) {
+                System.out.println("Invalid message received. Discarded." + replicaName());
+            }
 
             //Generate a reply
-            BranchReplyBody replyBody = handleBranchRequest(body, header);
+            BranchReplyBody replyBody = null;
+            if (body != null)
+                replyBody = handleBranchRequest(body, header);
 
             //Send the reply
             try {
