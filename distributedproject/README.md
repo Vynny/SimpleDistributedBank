@@ -1,4 +1,11 @@
-Running Included Binaries
+Building The Project
+-
+
+### Maven
+1) From distributedproject/
+2) Run 'mvn clean package'
+
+Running Built Binaries
 -
 
 ### Run ORB Daemon
