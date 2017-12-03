@@ -37,7 +37,7 @@ public class ManagerInputHandler extends InputHandler {
                 try {
                     FrontEnd serverRemote = CORBAConnector.connectFrontEnd();
 
-                    if (requestedAction == Action.GET_ACCOUNT_COUNT || requestedAction == Action.TRANSFER || serverRemote != null) {
+                    if (serverRemote != null) {
 
                         switch (requestedAction) {
                             case CREATE_RECORD:
@@ -47,7 +47,7 @@ public class ManagerInputHandler extends InputHandler {
                                 BankLogger.logUserAction(managerId, serverRemote.editRecord(managerId, fullCommand[2], fullCommand[3], fullCommand[4]));
                                 break;
                             case TRANSFER:
-                                //UDPBroadcaster.transferFund(managerId, fullCommand[2], fullCommand[3], fullCommand[4]);
+                                BankLogger.logUserAction(managerId, serverRemote.transferFund(fullCommand[2], fullCommand[3], fullCommand[4]));
                                 break;
                             case GET_ACCOUNT_COUNT:
                                 BankLogger.logUserAction(managerId, serverRemote.getAccountCount(managerId));
@@ -119,7 +119,7 @@ public class ManagerInputHandler extends InputHandler {
         System.out.println("-- Manager Commands --");
         System.out.println("createAccountRecord managerId firstName lastName address phone branch");
         System.out.println("editRecord managerId customerId fieldName newValue");
-        System.out.println("transfer managerId amount sourceCustomerId destCustomerId");
+        System.out.println("transfer managerId sourceCustomerId amount destCustomerId");
         System.out.println("getAccountCount managerId");
 
         System.out.println();

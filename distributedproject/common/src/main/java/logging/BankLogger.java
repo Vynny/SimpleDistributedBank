@@ -42,7 +42,9 @@ public class BankLogger {
             fileHandler.setFormatter(simpleFormatter);
 
             //Print to console
+            System.out.println();
             System.out.println(message);
+            System.out.println();
 
             //Log to file
             logger.info(message);
