@@ -35,7 +35,6 @@ public class FrontEndImpl extends FrontEndPOA {
 
     private Message messages[];
     private boolean receivedAllResults;
-    private boolean receivedFirstReply;
 
     private boolean success;
     private String finalResult;
@@ -77,7 +76,7 @@ public class FrontEndImpl extends FrontEndPOA {
             if (reply != null) {
                 printReply(reply);
 
-                receivedFirstReply = true;
+                boolean receivedFirstReply = true;
                 //Check that this is indeed the first and only reply
                 for (int i = 0; i < messages.length; ++i) {
                     if (messages[i] != null)
