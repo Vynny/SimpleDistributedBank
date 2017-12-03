@@ -174,7 +174,7 @@ public class ReplicaManager {
             case DEPOSIT:
                 replyText = branchServer.deposit(requestMap.get("customerId"), requestMap.get("amount"));
 
-                if (shouldCrash(requestMap.get("amount"))) {
+                if (canFail && shouldCrash(requestMap.get("amount"))) {
                     System.out.println("!!! CRASH ERROR TRIGGERED !!");
                     this.shouldCrash = true;
                 }

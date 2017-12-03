@@ -30,13 +30,9 @@ public class ClientInputHandler extends InputHandler {
             String customerId = fullCommand[1];
             if (isUserIdValid(customerId)) {
                 try {
-                    FrontEnd serverRemote = null;
+                    FrontEnd serverRemote = CORBAConnector.connectFrontEnd();
 
-                    if (requestedAction != Action.TRANSFER)
-                        serverRemote = CORBAConnector.connectFrontEnd();
-
-                    if (requestedAction == Action.TRANSFER || serverRemote != null) {
-
+                    if (serverRemote != null) {
                         switch (requestedAction) {
                             case DEPOSIT:
                                 BankLogger.logUserAction(customerId, serverRemote.deposit(customerId, fullCommand[2]));
@@ -45,7 +41,7 @@ public class ClientInputHandler extends InputHandler {
                                 BankLogger.logUserAction(customerId, serverRemote.withdraw(customerId, fullCommand[2]));
                                 break;
                             case TRANSFER:
-                                BankLogger.logUserAction(customerId, serverRemote.transferFund(customerId, fullCommand[2], fullCommand[2]));
+                                BankLogger.logUserAction(customerId, serverRemote.transferFund(customerId, fullCommand[2], fullCommand[3]));
                                 break;
                             case GETBALANCE:
                                 BankLogger.logUserAction(customerId, serverRemote.getBalance(customerId));
