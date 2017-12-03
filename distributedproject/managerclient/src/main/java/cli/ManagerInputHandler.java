@@ -26,7 +26,7 @@ public class ManagerInputHandler extends InputHandler {
     }
 
     @Override
-    protected void parseInput(String input) {
+    public void parseInput(String input) {
         String[] fullCommand = input.split(" ");
 
         Action requestedAction = validateAction(fullCommand);
