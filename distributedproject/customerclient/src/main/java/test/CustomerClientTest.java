@@ -6,6 +6,7 @@ public class CustomerClientTest implements Runnable {
     private static String[] test0 = { "deposit QCC1000 50" };
     private static String[] test1 = { "deposit QCC1000 50", "deposit QCC1000 50", "withdraw QCC1000 100",
             "getBalance QCC1000" };
+    private static String[] testBalance = { "getBalance QCC1000" };
 
     private String[] inputs;
     private ClientInputHandler client;
@@ -17,6 +18,8 @@ public class CustomerClientTest implements Runnable {
 
     public static void main(String[] args) {
         startTestThreads(test1, 10);
+        System.out.println("Testing remaining balance, should be 0 on a fresh system");
+        startTestThreads(testBalance, 1);
     }
 
     private static void startTestThreads(String[] inputs, int size) {
