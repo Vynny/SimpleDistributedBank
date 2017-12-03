@@ -301,7 +301,7 @@ public class FrontEndImpl extends FrontEndPOA {
      */
 
     public String createAccountRecord(String managerID, String firstName, String lastName, String address, String phone, String branch) {
-        branch = resolveBranch(managerID);
+        this.branch = resolveBranch(managerID);
         try {
             BranchRequestBody body = new BranchRequestBody().createAccountRecord(managerID, firstName, lastName, address, phone, branch);
             udp.send(body, "createAccountRecord", resolveSequencerId(managerID), FEID);

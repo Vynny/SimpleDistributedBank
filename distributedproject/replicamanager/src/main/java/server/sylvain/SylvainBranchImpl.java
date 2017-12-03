@@ -52,7 +52,7 @@ public class SylvainBranchImpl implements BranchServer {
 
             CustomerUser customerUser = new CustomerUser(branchEnum, firstName, lastName, address, phone);
             this.customerDatabase.addCustomer(customerUser);
-            response = BankLogger.logAndReturn("Successfully created new customer and added to customer database. Customer id: " + customerUser.getCustomerId());
+            response = BankLogger.logAndReturn("Successfully created new customer and added to customer database. Customer id " + customerUser.getCustomerId());
 
         } catch (IllegalArgumentException e) {
             response = BankLogger.logAndReturn("You have entered an invalid branch");
