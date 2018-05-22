@@ -1,9 +1,10 @@
 Building The Project
 -
+### Purpose
+Refer to the [design document](distributed-bank-design.pdf) for more details about this project.
 
 ### Maven
-1) From distributedproject/
-2) Run 'mvn clean package'
+1) Run 'mvn clean package'
 
 Running Built Binaries
 -
