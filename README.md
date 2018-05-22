@@ -1,8 +1,13 @@
+Purpose
+-
+This project aims to implement a simple distributed bank system that can either be fault tolerant or highly available.
+Written in fall 2016 for SOEN423 as a final project.
+
+Refer to the [design document](distributed-bank-design.pdf) for more details about the design and implementation of this project.
+
+
 Building The Project
 -
-### Purpose
-Refer to the [design document](distributed-bank-design.pdf) for more details about this project.
-
 ### Maven
 1) Run 'mvn clean package'
 
